@@ -1,0 +1,2 @@
+{"database":"_session.*","verb":"DELETE","metric":"stfailpct","operator":">=","limit":"10","qualifier":"ttcount","qoperator":">","qlimit":"1000"}
+{"metric":"travg","operator":">=","limit":"90","qualifier":"ttcount","qoperator":">","qlimit":"4"}

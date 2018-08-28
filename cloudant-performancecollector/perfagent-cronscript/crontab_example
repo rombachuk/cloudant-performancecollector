@@ -1,0 +1,3 @@
+* * * * * /opt/cloudant-specialapi/perfagent_cronscript/perfagent_every_minute.sh verb 2 1 centos65-loader2.ibm.com cl11c74lb1.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
+* * * * * /opt/cloudant-specialapi/perfagent_cronscript/perfagent_every_minute.sh endpoint 2 1 centos65-loader2.ibm.com cl11c74lb1.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
+* * * * * /opt/cloudant-specialapi/perfagent_cronscript/compactionagent_every_minute.sh centos65-loader2.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
