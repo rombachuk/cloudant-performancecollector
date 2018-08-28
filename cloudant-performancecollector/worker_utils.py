@@ -4,8 +4,6 @@ import sys
 import os
 import base64
 import logging
-import api_utils
-import migrateapi
 import time
 
 def process_queue(sess,clusterurl,db):
