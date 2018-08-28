@@ -7,17 +7,17 @@ import re
 from optparse import OptionParser
 
 def process_defaults_config(cfile):
-    default_connectioninfo = '/opt/cloudant-specialapi/perfagent_connection.info'
+    default_connectioninfo = '/opt/cloudant-performancecollector/perfagent_connection.info'
     default_certificate_verification = False
-    default_requests_ca_bundle = '/opt/cloudant-specialapi/ca.pem'
+    default_requests_ca_bundle = '/opt/cloudant-performancecollector/ca.pem'
     default_inputlogfile = '/var/log/haproxy.log'
-    default_thresholdsfile = '/opt/cloudant-specialapi/perfagent_thresholds.info'
-    default_eventsexclusionsfile = '/opt/cloudant-specialapi/perfagent_eventsexclusions.info'
-    default_statsexclusionsfile = '/opt/cloudant-specialapi/perfagent_statsexclusions.info'
+    default_thresholdsfile = '/opt/cloudant-performancecollector/perfagent_thresholds.info'
+    default_eventsexclusionsfile = '/opt/cloudant-performancecollector/perfagent_eventsexclusions.info'
+    default_statsexclusionsfile = '/opt/cloudant-performancecollector/perfagent_statsexclusions.info'
     default_scope = 'endpoint'
     default_granularity = 'hour'
     default_performercount = 10
-    default_resultslocation = '/opt/cloudant-specialapi/perfagent_results'
+    default_resultslocation = '/opt/cloudant-performancecollector/perfagent_results'
     default_outputformat = 'csv'
     if cfile and os.path.isfile(cfile):
       cf = open(cfile,'r')

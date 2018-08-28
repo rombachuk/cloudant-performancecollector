@@ -31,7 +31,7 @@ except:
     logging.warn("{cloudant performance agent} Unable to disable urllib3 warnings")
     pass
 
-defaults_file = "/opt/cloudant-specialapi/perfagent.conf"
+defaults_file = "/opt/cloudant-performancecollector/perfagent.conf"
 logfilename = "/var/log/cloudant_perfagent.log"
 
 logging.basicConfig(filename = logfilename, level=logging.WARN,
