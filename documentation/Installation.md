@@ -191,7 +191,7 @@ The software unpacks to the following directories :
 
 #### Example
 
-Software release 27.0.2 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-27.0.2.tar.gz` and unpacked with tar as  
+Software release 27.0.3 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-27.0.2.tar.gz` and unpacked with tar as  
   
   
 ```  
@@ -249,9 +249,9 @@ Once the configuration steps are done, go to `deploy` directory, and run `./clea
   
 This script will :  
 
-* create a new installation in `/opt/cloudant-performancecollector`
+* create a new installation in `/opt/cloudant-performancecollector` using the `conf` and `info` files contained in the installer's `cloudant-performancecollector` directory
 * backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the new installation
-* create new service files in `/etc/init.d` and start them : services are created called `csapi`, `csapi-migrater`
+* create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
 #### Patch Install
@@ -265,7 +265,7 @@ This script will :
   
 * update the *.py files in `/opt/cloudant-performancecollector`
 * backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the patched installation
-* create new service files in `/etc/init.d` and start them : services are created called `csapi`, `csapi-migrater`
+* create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
 
