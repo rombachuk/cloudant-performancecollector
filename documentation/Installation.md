@@ -71,16 +71,17 @@ Once the service is running, it must be configured to allow the performancecolle
   ```
   -- edit the file pg_hba.conf file (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as :  
   
-  ```  
-# "local" is for Unix domain socket connections only
+  ```    
+\# "local" is for Unix domain socket connections only
 local   all             all                                     password
-# IPv4 local connections:
+\# IPv4 local connections:
 host    all             all             127.0.0.1/32            password
 host    all             all             192.168.254.184/24      password
 host    all             all             192.168.254.61/24       password
-# IPv6 local connections:
+\# IPv6 local connections:
 host    all             all             ::1/128                 password
-  ```
+  ```  
+  
   ensure the methods are 'password' as above.  
   ensure that IPv4 local client host lines exist for all clients.   
 _In the example above, the performancecollector is 192.168.254.61 and the grafana-server is 192.168.254.184. You can use hostnames if you like. Without these lines, you cannot login to postgres from those boxes._
