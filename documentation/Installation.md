@@ -195,7 +195,14 @@ Software release 27.0.3 is downloaded to server cl11c74lb1 directory  `/root/sof
   
   
 ```  
-
+[root@cl11c74lb1 cloudant-performancecollector-27.0.3]# pwd
+/root/software/cloudant-performancecollector-27.0.3
+[root@cl11c74lb1 cloudant-performancecollector-27.0.3]# ls -l
+total 8
+drwxrwxr-x 4 root root 4096 Sep 14 11:53 cloudant-performancecollector
+drwxrwxr-x 2 root root   54 Sep 14 11:53 deploy
+drwxrwxr-x 2 root root  127 Sep 14 11:53 documentation
+-rw-rw-r-- 1 root root  155 Sep 14 11:53 README.md
 ```    
 
 ### Clean Install
@@ -205,7 +212,11 @@ Several steps are needed :
   
 * configure haproxy token setup in `cloudant-performancecollector/perfagent_collect.conf`
 * configure cluster access for metricsdb based stats in `cloudant-performancecollector/perfagent_connection.info`
+* configure exclusions for data collection
+* configure exclusions and thresholds for event-detection
 * run the deploy/clean_install.sh script
+* the installer will optionally build a new schema in postgres : do this only on the first load-balancer install : backup any old data you need
+* configure crontab to run periodic metric collection jobs
 
 
 Do the installation as `root`
@@ -255,7 +266,11 @@ This script will :
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
 #### Patch Install
-This option is used when an upgrade to an existing installation is required. No changes to the configuration files are carried out, so cluster url and credentials, thresholds and exclusions are left as they are.
+This option is used when an upgrade to an existing installation is required. No changes to the configuration files are carried out, so cluster url and credentials, thresholds and exclusions are left as they are.  
+
+The crontab for periodic jobs may need adjustment given the features changed or introduced in the patch. Release notes for the patch will indicate this.
+
+Schema changes to postgres may be required. Release notes for the patch will indicate how to do this.
 
 Do the installation as `root`
 
