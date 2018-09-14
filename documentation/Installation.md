@@ -69,8 +69,8 @@ Once the service is running, it must be configured to allow the performancecolle
   psql> create user cloudant with superuser password 'cloudant';
   psql>\q
   ```
-  -- edit the file pg_hba.conf file (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as :
-
+  -- edit the file pg_hba.conf file (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as :  
+  
   ```  
 # "local" is for Unix domain socket connections only
 local   all             all                                     password
