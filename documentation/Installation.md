@@ -91,8 +91,9 @@ _In the example above, the performancecollector is 192.168.254.61 and the grafan
   -- edit the file postgresql.conf (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as:
   
   ```
-listen_addresses = 'localhost,postgres-host.fqdn'
-```
+  listen_addresses = 'localhost,postgres-host.fqdn'
+  ```  
+
   ensure the listen_addresses has the hostname of the postgres server in the list.
 Without this, access to postgres is limited to localhost (ie 127.0.0.1)
 
