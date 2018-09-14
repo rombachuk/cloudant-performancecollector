@@ -61,7 +61,7 @@ For RHEL or Centos, `yum install postgresql-server` will install 8.4 but more re
 Once the service is running, it must be configured to allow the performancecollector and grafana to connect using account names and passwords:
 
 * as user `postgres`, modify the default security check to passwords, using the following steps :  
-  -- adjust the accounts so they have passwords via `psql` shell
+  -- adjust the accounts so they have passwords via `psql` shell  
   
   ```
   $ psql -U postgres
