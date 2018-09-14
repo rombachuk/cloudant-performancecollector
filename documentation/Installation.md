@@ -1,208 +1,274 @@
-# Installing the specialapi
+# Installing the performancecollector
 
-The specialapi is most conveniently installed on the two load balancers of a cloudant local cluster. The existing virtualip mechanism for the cloudant cluster is also used to provide a highly-available service for this specialapi.
-  
+### Planning your deployment
+
+[architecture]: perfagent-architecture.png
+
+![architecture]
+ 
+The overall architecture for performancecollector has :  
+
+*	each load-balancer (A,B) forwards latest proxy data to the  performancecollector (C)
+*	processing of [proxy] and [cluster metricsdb] data into metrics by the performancecollector
+*   metrics are checked against thresholds to generate `events` files which can be used by an event-tool `eg IBM Netcool` to signal failure modes to admin operators
+*	periodic (per-minute) delivery of metrics into postgres database (D) from the performancecollector
+*	grafana server (E) and connects to postgres datasource. 
+*  user runs grafana dashboard on his browser which presents data from the datasource
+*  _optional ad-hoc collection runs via special api, with results delivered in json-format within a cloudant document (see api-based collection section)_
+
+The performancecollector is most conveniently installed on the two load balancers of a cloudant local cluster: ie function C above is located on servers A and B.
+
+This removes the overhead of forwarding latest proxy data to another server, and the effort of maintaining another server for function C.
+
+The performancecollector causes bursts of high cpu usage on one core for about 10-20 seconds per minute if REST volumes are high, and this overhead must be accounted for in loadbalancer dimensioning.   
+
+If dedicating a core on load-balancer servers to the performance collection is not acceptable, then :  
+
+* the performancecollector should be installed on a distinct server
+* haproxy.log files can be copied to these servers from load-balancers  
+* contact the cloudant-performancecollector support team for specific assistance
+
+
+The performancecollector on each load-balancer sends its results to a postgres database. Data is blank for the standby load-balancer. On a switchover, the active balancer will process data and data will appear.
+
+The postgres database should be on a separate server to the load-balancers. It may be convenient to combine functions D and E (ie co-locate postgres database and grafana server functions on one host).
+
+
+
+
+### Key Steps
+Overall operation is summarised as :  
+
+* performancecollector computes metrics from file and database sources and loads the results into a **postgres** database
+* cloudant-performancedashboards content is used on **Grafana**  to display the results from the postgres datasource.
+
 The install requires several steps: 
   
-* installing (python-based) flask webserver on load balancers
-* configuring existing load-balancer haproxys to redirect certain requests to flask
-* installing the specialapi software (flask-served content)
-* configuring the specialapi features
+* install and configuration of postgres database on a server
+* install and configuration of grafana on a server
+* install and configuration of postgres client on load-balancers
+* configuration of haproxy to support collection on load-balancers
+* install and configuration of performancecollector on load-balancers
+* _optional set up of ad-hoc api-based collection jobs_
 
-Optionally, the specialapi can be used as a front-end to service api-based requests to a running cloudant-performancecollector. This capability requires the cloudant-performancecollector to be installed and running.
 
-## Load Balancer Install
-These instructions are for the case where the _api is run on the load-balancer, including perfagent activities.
-###	Loading binary
-As user 'root', go to /opt and tar the supplied binary using
-    
-```  
-$ tar xvf cloudant-specialapi.N.tar
-```  
-or patch using the patch by going to /opt/cloudant-specialapi and tar the supplied binary using  
-   
-```
-$ tar xvf cloudant-specialapi.patch.N.tar  
-```
+## Postgres Server Install
 
-###	Flask Server libraries
-As user 'root', install python libraries for the api :  
+Postgres server can be installed on any server, or an existing postgres server can be used. Postgres by default does not use the account/password type login method. 
+
+For RHEL or Centos, `yum install postgresql-server` will install 8.4 but more recent releases can be installed by using the explicit version number eg `yum install postgresql94-server`  
+
+Once the service is running, it must be configured to allow the performancecollector and grafana to connect using account names and passwords:
+
+* as user `postgres`, modify the default security check to passwords, using the following steps :  
+  -- adjust the accounts so they have passwords via `psql` shell
   
-```
-$ pip install flask
-$ pip install requests  
-```  
-### 	Configuring haproxy for Flask backend
-####	Number of logline fields
-The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
-The number of fields must be synched in the /opt/cloudant-specialapi/perfagent-collect.conf 'base_index' parameter:  
+  ```
+  $ psql -U postgres
+  psql> alter user postgres password 'postgres';
+  psql> create user cloudant with superuser password 'cloudant';
+  psql>\q
+  ```
+  -- edit the file pg_hba.conf file (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as :
 
-* cookie capture set  
-If the haproxy.cfg includes lines for capturing the request header and cookie, such as  
+  ```  
+# "local" is for Unix domain socket connections only
+local   all             all                                     password
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            password
+host    all             all             192.168.254.184/24      password
+host    all             all             192.168.254.61/24       password
+# IPv6 local connections:
+host    all             all             ::1/128                 password
+  ```
+  ensure the methods are 'password' as above.  
+  ensure that IPv4 local client host lines exist for all clients.   
+_In the example above, the performancecollector is 192.168.254.61 and the grafana-server is 192.168.254.184. You can use hostnames if you like. Without these lines, you cannot login to postgres from those boxes._
+
+  -- edit the file postgresql.conf (usually located in `/var/lib/pgsql/9.4/data/)`, and modify as:
+  
+  ```
+listen_addresses = 'localhost,postgres-host.fqdn'
+```
+  ensure the listen_addresses has the hostname of the postgres server in the list.
+Without this, access to postgres is limited to localhost (ie 127.0.0.1)
+
+* restart postgres as `root`, using `systemctl restart postgres-9.4`  
+* test that `root` linux user can now logon to postgres, using
+	`$ psql -U cloudant -d postgres -h postgres-host`
+       with password 'cloudant'
+
+If this is ok. then the perfagent can be configured to connect to postgres, 
+
+## Grafana Server Install
+
+Install grafana on a server. The `cloudant-performancecollector` and `cloudant-performancedashboards` are designed to work with Grafana 5 or later.
+
+Standard Grafana installation procedures can be used.
+
+Grafana is usually configured via the web on port 3000.
+Access grafana with account `admin` and the password. 
+
+Set up a datasource using the Grafana web interface :  
+
+```
+a.	type = PostgreSQL
+b.	host = postgreshost:5432
+c.	database = postgres
+d.	user = cloudant
+e.	password = cloudant
+f.	SSL mode = disable
+g.	name = cloudantstats
+```
+Save & **test**.
+
+
+Download the latest dashboards from github to a pc or mac from `https://github.com/rombachuk/cloudant-performancedashboards`.   
+Unpack the zip or pull individual <dashboard>.json files.
+
+Then import the json files via grafana home page. Choose `cloudantstats` as your datasource.
+
+
+## Load Balancer haproxy configuration
+
+####	Number of logline tokens (fields)
+The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
+
+The standard haproxy configuration for Cloudant clusters does not include capture lines. This means the number of tokens per logfile line is 17.
+
+If auditing is in place, then additional capture lines may appear. An example of capture lines for auditing is 
   
 ```
   capture request header Authorization len 256    
   capture cookie AuthSession= len 256  
 ```
-then set base_index = 19 (default)
+The number of tokens is increased by the number of additional captures. So the haproxy.log will have 19 tokens in the above example. This number must be synchronised in a config file in the collector (see configuration).
 
-* cookie capture not set  
-If the haproxy.cfg does not include these captures, then set base_index = 17
 
-####	_api backend
-The \_api endpoint backend is configured to point to localhost:5000 when the api is run on a load-balancer.
+## Performancecollector Install
 
-lines are added after the dashboard setup. They follow a similar pattern to the dashboard setup. 
+### Postgres Client
 
-1)	Add acl for api_assets after dashboard_assets
-    
-```  
-acl dashboard_assets path_beg /dashboard.     
-acl api_assets path_beg /_api
-```  
+The standard postgres client for the operating system should be installed on each performancecollector server (load-balancer). There is no need to install postgresql-server.
 
-2)	Add use\_backend for api\_assets\_host after dashboard\_assets\_host
+For RHEL7 or Centos7, this can be achieved with 'yum install postgresql'
 
-```  
-use_backend dashboard_assets_host if dashboard_assets      
-use_backend api_assets_host if api_assets  
-```  
+Once installed, test login to the postgres server is possible as linux user `root` using postgres user `cloudant` using the `psql` tool :
 
-3)	Add backend api\_assets\_host after 'backend dashboard\_assets\_host'  
+  ```
+  $ psql -U cloudant -d postgres -h postgres-host
+  psql> 
+  ```  
+  where postgres-host is the name of the postgres server. 
 
-```
-backend api_assets_host 
-  option httpchk GET /_api    
-  server localhost 127.0.0.1:5000 check inter 7s   
-```  
 
-Restart the load balancer (cast node restart) after the change to the haproxy.cfg file.
-### 	Configuring Connectivity & API Usage
-Now configure the API as described in 'add link here'.  
+### Python libraries
 
-If you are going to use the perfagent on this load-balancer,  configure the perfagent as described in 'add link here'.  
- 
-Once the API is configured with the necessary information, you need to enable the services so that they run on reboot:  
+The following library should be installed on each performancecollector server (load-balancer), as `root`   
 
-```
-$ cp csapi /etc/init.d
-$ cp csapi_migrate /etc/init.d
-$ cp csapi_perfagent /etc/init.d
-$ systemctl enable csapi
-$ systemctl enable csapi_migrate
-$ systemctl enable csapi_perfagent 
-```
-(cspai_perfagent only if the worker is to run on this server).  
+`$ pip install pandas`
+
+### Collecting software from Github
+
+cloudant-performancecollector is released via github. Use a github client to download the release level required.
+
+The github repository is 
+`https://github.com/rombachuk/cloudant-performancecollector`
+
+The releases option in Github shows the available releases.
+Download from the site in either tar.gz or zip format, and place in a suitable directory, as `root` on the server eg `/root/software`
+
+
+### 	Unpacking 
+Then unpack the software with `tar xvf` or `unzip`, depending on the download format from github.
+
+The software unpacks to the following directories :  
   
-Then start the services with  
+  * cloudant-performancecollector (the software to be installed)
+  * documentation (markdown files documenting the package)
+  * test (testing scripts for the package)
+  * deploy (installation & patch scripts for the package)
+
+#### Example
+
+Software release 27.0.2 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-27.0.2.tar.gz` and unpacked with tar as  
   
+  
+```  
+
+```    
+
+### Clean Install
+This option is used when a brand new install is required, or when an existing install is to be deleted and reset.
+
+Several steps are needed :  
+  
+* configure haproxy token setup in `cloudant-performancecollector/perfagent_collect.conf`
+* configure cluster access for metricsdb based stats in `cloudant-performancecollector/perfagent_connection.info`
+* run the deploy/clean_install.sh script
+
+
+Do the installation as `root`
+
+#### Configuration (perfagent-collect.conf)
+Align the base index in this file with the Number of logline tokens (fields) set up in the haproxy.log files (usually either 17 or 19), for example with no captures in the haproxy.log we would have :
+
+`base_index	17`
+
+#### Configuration (perfagent_connection.info)
+Set up the access url and credentials for the cluster.
+
+```
+clusterurl      http://activesn.bkp.ibm.com  
+admincredentials    bWlk********3MHJk    
 ```   
-$ systemctl start csapi
-$ systemctl start csapi_migrate
-$ systemctl start csapi_perfagent  
-```  
-(cspai_perfagent only if the worker is to run on this server) 
+* The clusterurl should be the vip of the cloudant local cluster.
+* The admin credentials shoud be a base64encoding of the string `user:password` where the user is a cluster admin user.  
 
-The perfagent is cpu-intensive if it is asked to process long time ranges on busy clusters, and will occupy cpu capacity on the load-balancer in these cases.  
-Consider running the api on a separate server in these cases.
+#### Configuration of haproxy Data Exclusions (perfagent\_stats\_exclusions.info)
+
+Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
+
+Use this file to define what you wish to ignore. See the configuration documentation for more details.
 
 
-##	Separate Server Install
-###	Loading binary
-The following instructions apply to a separate server running Centos7.4 or RHEL7.4
-As user 'root' on the separate server, go to /opt and tar the supplied binary using
+#### Configuration of haproxy Event Exclusions (perfagent\_events\_exclusions.info)
+
+Some data can be excluded from event-sensing to avoid unwanted repeated events or other reasons. 
+
+Use this file to define what you wish to ignore. See the configuration documentation for more details.
+
+#### Configuration of haproxy Event Thresholds (perfagent\_events\_thresholds.info)
+
+Use this file to define what you wish to signal as the limit for eventing. See the configuration documentation for more details.
+
+
+#### Installation
+
+Once the configuration steps are done, go to `deploy` directory, and run `./clean_install.sh` 
   
-```
-$ tar xvf cloudant-specialapi.N.tar
-```  
-or patch using the patch by going to /opt/cloudant-specialapi and tar the supplied binary using  
+This script will :  
+
+* create a new installation in `/opt/cloudant-performancecollector`
+* backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the new installation
+* create new service files in `/etc/init.d` and start them : services are created called `csapi`, `csapi-migrater`
+* backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
+
+#### Patch Install
+This option is used when an upgrade to an existing installation is required. No changes to the configuration files are carried out, so cluster url and credentials, thresholds and exclusions are left as they are.
+
+Do the installation as `root`
+
+Go to `deploy` directory, and run `./patch_install.sh` 
+
+This script will :  
   
-```
-$ tar xvf cloudant-specialapi.patch.N.tar
-```  
-
-###	Python libraries
-As user 'root', install python libraries for the api :  
-  
-```  
-$ pip install flask
-$ pip install pandas
-$ pip install requests
-```  
-### 	Configuring haproxy for api backend
-####	Which proxies
-Do these steps on each load-balancer that is serving traffic for your cluster.  
-Normally this will be on two proxies.  
-The haproxy.log files for each load-balancer should be copied via rsyslog to the same apiserver if the perfagent feature is to be used.
-####	Number of logline fields
-The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
-The number of fields must be synched in the /opt/cloudant-specialapi/perfagent-collect.conf 'base_index' parameter:  
-
-* cookie capture set  
-If the haproxy.cfg includes lines for capturing the request header and cookie, such as  
-  
-```
-  capture request header Authorization len 256    
-  capture cookie AuthSession= len 256  
-```
-then set base_index = 19 (default)
-
-* cookie capture not set  
-If the haproxy.cfg does not include these captures, then set base_index = 17
+* update the *.py files in `/opt/cloudant-performancecollector`
+* backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the patched installation
+* create new service files in `/etc/init.d` and start them : services are created called `csapi`, `csapi-migrater`
+* backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
 
 
-####	_api backend
-The \_api endpoint backend is configured to point to localhost:5000 when the api is run on a load-balancer.
-
-lines are added after the dashboard setup. They follow a similar pattern to the dashboard setup. 
-
-1)	Add acl for api_assets after dashboard_assets
-    
-```  
-acl dashboard_assets path_beg /dashboard.     
-acl api_assets path_beg /_api
-```  
-
-2)	Add use\_backend for api\_assets\_host after dashboard\_assets\_host
-
-```  
-use_backend dashboard_assets_host if dashboard_assets      
-use_backend api_assets_host if api_assets  
-```  
-
-3)	Add backend api\_assets\_host after 'backend dashboard\_assets\_host'  
-
-```
-backend api_assets_host 
-  option httpchk GET /_api    
-  server localhost 127.0.0.1:5000 check inter 7s   
-```  
-
-Restart the load balancer (cast node restart) after the change to the haproxy.cfg file.
-###	Configuring Connectivity & API Usage
-Now, as root on the separate apiserver, configure the API as described in 'add link here'.  
-If you are going to use the perfagent on this server. Configure the perfagent as described in 'add link here'   
-Once the API is configured with the necessary information, you need to enable the services so that they run on reboot:  
-
-```  
-$ cp csapi /etc/init.d
-$ cp csapi_migrate /etc/init.d
-$ cp csapi_perfagent /etc/init.d
-$ systemctl enable csapi
-$ systemctl enable csapi_migrate
-$ systemctl enable csapi_perfagent
-```  
- (csapi\_perfagent only if the worker is to run on this server)  
-Then start the services with  
-  
-``` 
-$ systemctl start csapi
-$ systemctl start csapi_migrate
-$ systemctl start csapi_perfagent
-```   
- (if the worker is to run on this server)
-
-The perfagent has  -H -L options to identify the log file to be processed. Use this to distinguish logfiles from different load balancers. See 'add link here'
 
 
