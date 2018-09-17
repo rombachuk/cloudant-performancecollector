@@ -27,17 +27,17 @@ then
  fi
  export PGPASSWORD=$cpwd
  echo 'dropping existing postgres proxydata schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/proxydata_postgres_drop.sql -o schema_drop.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/proxydata_postgres_drop.sql -o proxyschema_drop.log
  echo 'creating new postgres proxydata schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/proxydata_postgres.sql -o schema_create.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/proxydata_postgres.sql -o proxyschema_create.log
  echo 'dropping existing postgres metricsdb-data schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/metricsdbdata_postgres_drop.sql -o schema_drop.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/metricsdbdata_postgres_drop.sql -o metricsdbschema_drop.log
  echo 'creating new postgres metricsdb-data schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/metricsdbdata_postgres.sql -o schema_create.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/metricsdbdata_postgres.sql -o metricsdbschema_create.log
   echo 'dropping existing postgres volume-data schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres_drop.sql -o schema_drop.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres_drop.sql -o volumeschema_drop.log
  echo 'creating new postgres volume-data schema'
- /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres.sql -o schema_create.log
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres.sql -o volumeschema_create.log
 else
  echo 'no postgres schema changes'
 fi

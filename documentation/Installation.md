@@ -9,9 +9,9 @@
 The overall architecture for performancecollector has :  
 
 *	each load-balancer (A,B) forwards latest proxy data to the  performancecollector (C)
-*	processing of [proxy] and [cluster metricsdb] data into metrics by the performancecollector
+*	processing of [proxy],[metricsdb] and [cluster volume] data into metrics by the performancecollector
 *   metrics are checked against thresholds to generate `events` files which can be used by an event-tool `eg IBM Netcool` to signal failure modes to admin operators
-*	periodic (per-minute) delivery of metrics into postgres database (D) from the performancecollector
+*	periodic (per-minute or daily for cluster-volumes) delivery of metrics into postgres database (D) from the performancecollector
 *	grafana server (E) and connects to postgres datasource. 
 *  user runs grafana dashboard on his browser which presents data from the datasource
 *  _optional ad-hoc collection runs via special api, with results delivered in json-format within a cloudant document (see api-based collection section)_
@@ -29,7 +29,10 @@ If dedicating a core on load-balancer servers to the performance collection is n
 * contact the cloudant-performancecollector support team for specific assistance
 
 
-The performancecollector on each load-balancer sends its results to a postgres database. Data is blank for the standby load-balancer. On a switchover, the active balancer will process data and data will appear.
+The performancecollector on each load-balancer sends its results to a postgres database:  
+  
+*  Data is blank for the standby load-balancer. 
+*  On a switchover, the new active load-balancer will process data and data rows will appear.
 
 The postgres database should be on a separate server to the load-balancers. It may be convenient to combine functions D and E (ie co-locate postgres database and grafana server functions on one host).
 
@@ -48,7 +51,7 @@ The install requires several steps:
 * install and configuration of grafana on a server
 * install and configuration of postgres client on load-balancers
 * configuration of haproxy to support collection on load-balancers
-* install and configuration of performancecollector on load-balancers
+* install and configuration of performancecollector on load-balancers, including the periodic collection schedule via cron
 * _optional set up of ad-hoc api-based collection jobs_
 
 
@@ -219,7 +222,9 @@ Several steps are needed :
 * configure exclusions for data collection
 * configure exclusions and thresholds for event-detection
 * run the deploy/clean_install.sh script
-* the installer will optionally build a new schema in postgres : do this only on the first load-balancer install : backup any old data you need
+* the installer will optionally build a new schema in postgres :  
+-- do this only on the first load-balancer install  
+-- backup any old performance data you need
 * configure crontab to run periodic metric collection jobs
 
 
@@ -269,7 +274,17 @@ This script will :
 * create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
-#### Patch Install
+#### Crontab configuration
+Once the software is newly deployed, then the `root` user cron must be configured for periodic operation. It is recommended that :  
+ 
+* proxydata\_every\_minute entry is enabled on each load-balancer (linked to local haproxy.log file)
+* metricsdbdata\_every\_minute entry is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
+* volumedata\_every\_day is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
+
+The file `perfagent_results/crontab.example` provides a template. Consult the Configuration document for this tool to set the parameters to those appropriate for your cluster.
+
+
+### Patch Install
 This option is used when an upgrade to an existing installation is required. No changes to the configuration files are carried out, so cluster url and credentials, thresholds and exclusions are left as they are.  
 
 The crontab for periodic jobs may need adjustment given the features changed or introduced in the patch. Release notes for the patch will indicate this.
