@@ -1,11 +1,11 @@
 #!/bin/bash
 # set -x
 now=`date +%s`
-/usr/bin/python /opt/cloudant-performancecollector/volumedata_collect.py -x $2
+/usr/bin/python /opt/cloudant-performancecollector/volume_collect.py -x $2
 sleep 5
-dbfindfile="find /opt/cloudant-performancecollector/perfagent_results -name dbcompactionstats* | tail -n 1"
+dbfindfile="find /opt/cloudant-performancecollector/perfagent_results -name dbvolumestats* | tail -n 1"
 dbstatsfile=`eval $dbfindfile`
-viewfindfile="find /opt/cloudant-performancecollector/perfagent_results -name viewcompactionstats* | tail -n 1"
+viewfindfile="find /opt/cloudant-performancecollector/perfagent_results -name viewvolumestats* | tail -n 1"
 viewstatsfile=`eval $viewfindfile`
 dbpsqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"$now"dbrunner.sql"`
 viewpsqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"$now"viewrunner.sql"`
