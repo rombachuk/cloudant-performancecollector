@@ -18,6 +18,8 @@ The overall architecture for performancecollector has :
 
 The performancecollector is most conveniently installed on the two load balancers of a cloudant local cluster: ie function C above is located on servers A and B.
 
+The performancecollector is designed for use in RHEL7 or Centos7 hosted cloudant cluster environments. 
+ 
 This removes the overhead of forwarding latest proxy data to another server, and the effort of maintaining another server for function C.
 
 The performancecollector causes bursts of high cpu usage on one core for about 10-20 seconds per minute if REST volumes are high, and this overhead must be accounted for in loadbalancer dimensioning.   
@@ -123,7 +125,7 @@ a.	type = PostgreSQL
 b.	host = postgreshost:5432
 c.	database = postgres
 d.	user = cloudant
-e.	password = cloudant
+e.	password = default is cloudant
 f.	SSL mode = disable
 g.	name = cloudantstats
 ```

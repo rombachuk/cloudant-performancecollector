@@ -1,13 +1,13 @@
 
 # Introduction
 ## Release Information
-This document version is aligned with Release 26.0.0
+This document version is aligned with Release 27
 ## Document Purpose
-The purpose of this document is to provide a user guide for the cloudant-specialapi tool, delivered by IBM Services. 
+The purpose of this document is to provide a user guide for the cloudant-performancecollector tool, delivered by IBM Services. 
 The tool is provided on an opensource basis, and customers are free to enhance or modify the tool in any way. Such changes may of course modify the features, options, and descriptions provided in this document.
-Installation instructions and guidance for integration with monitoring & alerting subsystems in the customer's deployment are covered in other documents
+
 ## Intended Audience 
-The intended audience for this document are IBM customers who are deploying Cloudant Local Edition Clusters, and wish to use the specialapi features in the management of operations on their clusters.
+The intended audience for this document are IBM customers who are deploying Cloudant Local Edition Clusters, and wish to use the performancecollector features in the management of operations on their clusters.
 ## Commercial Clarification 
  
 This document does not amend in any way existing agreed terms and conditions of service, and readers are referred to IBM client representatives for any issues concerning terms and condition of service.
@@ -19,112 +19,87 @@ IBM may use or distribute any of the information you provide in any way it belie
 IBM, the IBM logo, and ibm.com are trademarks or registered trademarks of International Business Machines Corp., registered in many jurisdictions worldwide. Other product and service names might be trademarks of IBM or other companies. A current list of IBM trademarks is available on the web at Copyright and trademark information  
 
 #	Features Summary
-##	Database Operations (_api/managedb)
-This feature is intended to allow temporary 'elevated' privileges for database level operations. This allows users to create and delete databases, but without being granted '_admin' and 'server_admin' privilege. As a result, users can be prevented from seeing database content for sets of databases on a cluster that they share with other users.  
-  
-The managedb component supports:  
-  
-* creation of database
-* deletion of database
-* reading database endpoint  
-  
-for users who do not have '_admin' and 'server_admin' privilege on the cluster.  
+##	Periodic Data Collection and Reporting 
+This feature allows data to be collected from sources on running clusters and displayed on dashboards with the grafana tool using postgres as a SQL data source. 
 
-The user makes REST calls to the cluster _api/managedb endpoint to achieve these operations.
-Only those users listed in csapi_users file will be authorised.  
-  
-The REST call can use either a AuthSession cookie, or basic authentication.
-  
-The API will test the credentials supplied in the REST call against the cluster cluster-port authentication scheme. Invalid credentials at point of test will mean the call is rejected.  
-  
-Databases are created with members.names = request-username so that the database is read-write to the requesting user, and not world-open to anonymous requests.
-## Design Document Operations via Operational Queue (_api/migrate)
-This feature is intended to ensure create, update and delete operations on design-documents are processed as an operational queue, which executes in series and so limits the view_update and view_compact volumes on the cluster.   
-  
-For updates, the 'move and shift' technique is used, which ensures that reads with update=true or stale=false (default settings) will not block during the update process.  
+Each row collected is stamped with the cluster-id so data from several clusters can be captured to the same postgres data source.
 
-The migrate component supports:  
+This feature provides statistics at a finer scope than available from the metrics dashboard which is limited to dbnode or whole-cluster. This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster. 
   
-* submission of create/update job to the queue, returning jobid, if accepted
-* submission of delete job to the queue, returning jobid if accepted
-* reading status of job, using a jobid
-* deletion of designdocument 
+Collection is supported for:  
   
-The feature can be used by users who do not have 'admin' privilege to a database they are submitting the job for. The api temporarily elevates their privilege. This allows the blocking of design-doc operations via the direct Cloudant api, preventing cluster overload through high numbers of parallel view updates.  
-  
-The user makes REST calls to the cluster _api/migrate endpoint to achieve these operations.  
+* per-database metrics using haproxy log sources
+* per-host and per-type metrics using metricsdb database source
+* per-database and per-view volume metrics using cluster dbs as data source  
 
-Only those users listed in csapi_users file will be authorised.  
+Collection frequency is controlled by cron :  
   
-The REST call can use either a AuthSession cookie, or basic authentication.  
+* haproxy and metricsdb sourced data are collected every minute.  
+* cluster volume metrics are collected every day
 
-The API will test the credentials supplied in the REST call against the cluster cluster-port authentication scheme. Invalid credentials at point of test will mean the call is rejected.  
+Cluster-volume and haproxy collection are practical only when the number of databases is small - several thousand or less.
 
-## Performance Metrics Collection via Operational Queue (_api/perfagent)
-This feature is intended to provide cluster performance metrics broken down by resource level and time-period. This provides statistics at a finer scope than available from the metrics database which is limited to dbnode or whole-cluster. This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster.  
+In deployments using _10k databases or more_, constant periodic collection of haproxy and cluster-volume data **_should be disabled_**. Enabling these periodic collections is too intensive on the cluster and postgres storage. 
 
-Resource levels supported are:  
+Other collection rates and granularity are possible, but recommended only for limited-period investigative activities. See the Investigation features of this document, and the Investigation documentation.
+## Problem Detection with Threshold Conditions
+This feature allows problems to be detected by comparing the periodically-collected haproxy-sourced data against metric thresholds.   
   
-* all (ie whole cluster)
-* database
-* database + verb (ie reads, writes, deletes, etc)
-* database,verb,endpoint, where endpoint reflects grouping of requests to endpoint type  
--- _design (ddl operations)   
--- 	_find (all cloudantquery type calls)  
---	design/view (all map-reduce calls)  
---	documentlevel (all calls to individual docs)  
---	etc  
-*	database,verb,endpoint,document  
- (ie each distinct endpoint counted separate, including every individual document - only use sparingly since it often creates many rows)  
-  
-Time-Period granularity levels supported are:  
-  
-* minute, hour, day, all (the whole report-period)  
-  
-The component processes statistics by inspecting log files generated in the current active haproxy.  
-  
-Statistics reflect the content recorded by that proxy. If a proxy changeover has occurred in the report period requested, then the result is compromised. Consult your cluster dba for a record of such events.  
-  
-The log-inspection method is cpu-intensive and can frequently take several minutes, so requests to the api are processed via an operational queue.  
-  
-The perfagent component supports:  
-  
-* submission of statistics collect+process job to a queue, returning job id if accepted  
-* collection of status of a job and the result, using the jobid  
-  
-The user makes REST calls to the cluster _api/perfagent endpoint to achieve these operations.  
+For each per-minute collection period, event files may be produced which itemise the item and threshold-breach. Event files can be parsed by a Event Consolidation system such as `IBM Netcool Operations Insight` and processed onto event dashboards and paging systems.
 
-The component supports the detection of threshold-breach conditions within the result. Event fields are placed in the result which identify any breaches.  
-  
-The job is submitted with a set of options supplied as parameters to the REST call:  
+Clear condition event file lines are not produced, so the event system must detect when a threshold is no longer breached.
 
-* report period defined by 'fromtime' to 'totime'  
-* resource level defined by 'scope'  
-* time-period rollup defined by 'granularity'  
-* outputformat (json or csv)  
--- If csv, then results are stored in files which are referenced in the job response field  
--- if json, then stats and events are placed in the job response field  
-* location of input file to process
-* connection information for the queue (allows elevated passwords to change after job submission)
+Threshold conditions are defined in a file. Exclusions can be used to ignore conditions which are frequent and/or do not require action.
+
+The performancecollector supports:  
   
-The component also supports parameters which allow the definition of:  
+* multiple threshold checks against any haproxy-derived metric
+* multiple exclusion conditions either for metric or item
+* absolute thresholds not adaptive thresholds
     
-* stats exclusions, which means log entries meeting the exclusion criteria are ignored in stats collection  
-* threshold conditions with qualifiers, which are applied to stats results to look for breaches and create events in the results  
-* event exclusions, which means that stats results meeting the exclusion criteria do not have events generated for them, even threshold conditions are breached
-    
-Defaults are applied if parameters are omitted. These are set in a configuration file by the specialapi operator (typically the cluster dba team).  
-  
-Only those users listed in csapi_users file will be authorised.
-The REST call can use either a AuthSession cookie, or basic authentication.  
+## Investigation using cron 
+ 
+The performancecollector supports a powerful set of options to process investigative collections of haproxy data at various resource levels (scope) and time-rollups (granularity).   
 
-The API will test the credentials supplied in the REST call against the cluster cluster-port authentication scheme. Invalid credentials at point of test will mean the call is rejected.  
+The user can build shell scripts with these options and feed postgres and grafana. Custom schema creation and dashboard building may be required. 
+ 
+Two investigative features with example shellscripts and dashboard support are provided in the standard delivery : 
+ 
+* per-minute metrics at database-verb-endpoint scope level.  
+-- deeper than the standard database-verb level  
+-- particularly useful for POST verb  
+-- volume and response rates for \_find, or \_index etc.  
+-- additional dashboard available (Cluster Overview by Endpoint)  
 
-### Periodic Operation via Cron
+* per-minute/hour metrics for cluster volume data.  
+-- more frequent than the standard per-day collection  
+-- useful for compaction status tracking   
+-- useful for volume build-up rates in load testing  
+-- increased time granularity is supported on standard volume dashboards
 
-This feature can be used on a periodic basis to generate stats for a performance management system (say every minute for the previous minute), and events for an event & incident management system. It is convenient, but not essential, to use the command-line invocation method in these cases.  
-  
-This separates these periodic requests from adhoc use. See <add link here> for how to integrate the command line with postgres and grafana to view realtime dashboards.
+Consult the **Investigation using Cron** documentation for further information.
 
-This feature can be used on an adhoc basis to gather statistics with various options to support investigation of cluster behaviour broken down by the required resource-level.
+## Investigation using API 
+ 
+The performancecollector supports a powerful set of options to process investigative collections of haproxy data at various resource levels (scope) and time-rollups (granularity). 
+
+These can be used to make REST-based asynchronous collection requests via the cloudant-specialapi :  
+
+* user makes a POST request to the cluster \_api/perfagent endpoint with the required options
+* successful submission results in a returned documentid with status 'submitted'
+* on completion of the collection, the status is marked 'completed'
+* results for metrics and threshold-events are made available as json within the document for collection from the cluster database **_apiperfagentqueue_** 
+
+Requests are processed through a queue to prevent mass-parallel collection and a cpu hit on the load-balancer. 
+ 
+Large json results sets are possible if a endpoint-scope per-minute collection for a large start and stop time are invoked: especially when there are large numbers of databases on the cluster.
+
+Care should be taken to avoid these calls.
+
+It is recommended that the \_api/perfagent endpoint is disabled in the _specialapi_ outside of investigation processes. This protects the cluster workloads from accidental large results sets.
+
+Consult the **Investigation using API** documentation for further information.
+
+
+
 

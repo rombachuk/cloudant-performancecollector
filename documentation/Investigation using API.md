@@ -12,64 +12,7 @@ _results appear in the results directory specified in the perfagent.conf file (o
 * cron operation  
 --	can be used to populate postgres ready for display in grafana (see 'link here')
 * metrics supported  
---	additional compaction.py agent is available to gather various metrics useful for database & view size monitoring, and especially for compaction management _(these are not callable via the \_/api/perfagent endpoint at present)_  
-
-Resource levels supported are:  
-  
-* all (ie whole cluster)
-* database
-* database + verb (ie reads, writes, deletes, etc)
-* database,verb,endpoint, where endpoint reflects grouping of requests to endpoint type  
--- _design (ddl operations)   
--- 	_find (all cloudantquery type calls)  
---	design/view (all map-reduce calls)  
---	documentlevel (all calls to individual docs)  
---	etc  
-*	database,verb,endpoint,document  
- (ie each distinct endpoint counted separate, including every individual document - only use sparingly since it often creates many rows)  
-  
-Time-Period granularity levels supported are:  
-  
-* minute, hour, day, all (the whole report-period)  
-  
-The component processes statistics by inspecting log files generated in the current active haproxy.  
-  
-Statistics reflect the content recorded by that proxy. If a proxy changeover has occurred in the report period requested, then the result is compromised. Consult your cluster dba for a record of such events.  
-  
-The log-inspection method is cpu-intensive and can frequently take several minutes, so requests to the api are processed via an operational queue.  
-  
-The perfagent component supports:  
-  
-* submission of statistics collect+process job to a queue, returning job id if accepted  
-* collection of status of a job and the result, using the jobid  
-  
-The user makes REST calls to the cluster _api/perfagent endpoint to achieve these operations.  
-
-The component supports the detection of threshold-breach conditions within the result. Event fields are placed in the result which identify any breaches.  
-  
-The job is submitted with a set of options supplied as parameters to the REST call:  
-
-* report period defined by 'fromtime' to 'totime'  
-* resource level defined by 'scope'  
-* time-period rollup defined by 'granularity'  
-* outputformat (json or csv)  
--- If csv, then results are stored in files which are referenced in the job response field  
--- if json, then stats and events are placed in the job response field  
-* location of input file to process
-* connection information for the queue (allows elevated passwords to change after job submission)
-  
-The component also supports parameters which allow the definition of:  
-    
-* stats exclusions, which means log entries meeting the exclusion criteria are ignored in stats collection  
-* threshold conditions with qualifiers, which are applied to stats results to look for breaches and create events in the results  
-* event exclusions, which means that stats results meeting the exclusion criteria do not have events generated for them, even threshold conditions are breached
-    
-Defaults are applied if parameters are omitted. These are set in a configuration file by the specialapi operator (typically the cluster dba team).  
-  
-Only those users listed in csapi_users file will be authorised.
-The REST call can use either a AuthSession cookie, or basic authentication.  
-
-The API will test the credentials supplied in the REST call against the cluster cluster-port authentication scheme. Invalid credentials at point of test will mean the call is rejected.   
+--	additional compaction.py agent is available to gather various metrics useful for database & view size monitoring, and especially for compaction management _(these are not callable via the \_/api/perfagent endpoint at present)_   
 
 #	Using the command line
 The command line works exactly as the api, but instead of using a REST call with curl or code, you invoke the python script 
@@ -221,6 +164,154 @@ In this example
 •	the period is always just the last minute
 •	the postgres server runs on centos65-loader2.ibm.com
 •	in this case the compactionnagent actually runs on the load-balancer host. If you have 2 load-balancers, run this script on only one of them.  
+##	Installation for Periodic Operation
+###	Architecture
+
+[architecture]: perfagent-architecture.png
+
+![architecture]
+ 
+The preferred architecture has :  
+
+*	each load-balancer (A,B) forwarding its respective haproxy.log file to an input directory on the perfagent client server (C)
+*	scripts for each load-balancer scan the input haproxy.log file, and pump statistics for period now-2minutes to now-1minute to a postgres server D. postgres client is installed on C. Files are made on server C and loaded to server D using the postgres '\copy' command.
+*	scripts for compaction scan the cluster and generate csv for copy to server D. These scripts can be 
+*	postgres server D supports tables for haproxy-log stats and the compaction stats 
+*	postgres server must open port 5432 &/or 5432 to C and E
+*	grafana runs on server E and connects to datasource on D. dashboard for grafana available which is fitted to the data coming from C.
+*	grafana server must open port 3000 to users
+*	other scripts will be made available and will be released with a corresponding dashboard  
+
+It is possible to combine the roles shown above :  
+ 
+*	perfagent can run on each load-balancer, but requires bursts of cpu capacity  -> approximately 2 seconds of a cpu per 15k haproxy lines/sec
+*	postgres server could run on grafana server E
+
+###	postgres server
+Ensure port 5432 is not blocked by firewall.
+Install postgresql-server and postgresql (client). The procedure varies per OS and postgres version.
+For RHEL7.4, and postgres942, do this as root:  
+
+1)	`$ yum -y install `  
+`https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-2.noarch.rpm`
+2)	`$ yum -y install postgresql94`  
+3)	`$ yum -y install postgresql94-server`  
+4)	`$ /usr/pgsql-9.4/bin/postgresql94-setup initdb`  
+5)	`$ systemctl enable postgresql-9.4`  
+6)	`$ systemctl start postgresql-9.4`   
+7) switch user to postgres, using `$ su - postgres`  
+8)	modify the default security to passwords, using  
+	a) `psql -U postgres`  
+	b) within the psql shell  
+		i) `alter user postgres password 'postgres';`  
+   		ii) `create user cloudant with superuser password 'cloudant';`  
+   		iii) exit psql with `\q`  
+   	c) edit the file /var/lib/pgsql/9.4/data/pg_hba.conf, and modify as :
+   	
+``` 
+# "local" is for Unix domain socket connections only
+local   all             all                                     password
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            password
+host    all             all             192.168.254.184/24       password
+host    all             all             192.168.254.61/24       password
+# IPv6 local connections:
+host    all             all             ::1/128                 password
+```  
+
+Ensure the methods are `password` as above.  
+Ensure that IPv4 local client host lines exist for all clients.  
+
+In the example above, the perfagent-client is 192.168.254.61 and the grafana-server is 192.168.254.184. You can use hostnames if you like. Without these lines, you cannot login to postgres from those boxes.
+
+
+   d) edit the file /var/lib/pgsql/9.4/data/postgresql.conf, and modify as :
+   
+```
+listen_addresses = 'localhost,postgres-host.fqdn'
+```
+
+Ensure the listen_addresses has the hostname of the postgres server in the list.
+Without this, access to postgres is limited to localhost (ie 127.0.0.1)
+
+   e) restart postgres as root, using `systemctl restart postgres-9.4`  
+   f) test that root can now logon to postgres, using  
+   `$ psql -U cloudant -d postgres -h postgres-host`
+       with password `cloudant` or what you have set
+
+If this is ok. then the perfagent can be configured to connect to _postgres_, and log statistics for grafana to _display_.
+
+###	perfagent client
+It is assumed that the perfagent itself is installed on the perfagent client server.  
+
+To install the perfagent software itself see [Installing the specialapi](./Installation.md#installing-the-specialapi).  
+
+The additional step,after the perfagent is installed is to:
+•	install postgres client
+For RHEL7.4, do this as root:  
+
+1)	`$ yum -y install`  
+`https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-2.noarch.rpm`
+2)	`$ yum -y install postgresql94`
+
+Now test that you can logon to postgres, using
+	`$ psql -U cloudant -d postgres -h postgres-host`
+       with password 'cloudant' or what you have set
+
+If ok, exit psql with `\q` and run the two schemas script with: 
+ 
+`$ psql -U cloudant -d postgres -h postgres-host -f /opt/cloudant-specialapi/perfagent_postgres.sql`
+and
+`$ psql -U cloudant -d postgres -h postgres-host -f /opt/cloudant-specialapi/compactionagent_postgres.sql`
+
+with password 'cloudant'
+
+Note that you can clean out data from any previous versions of the perfagent using 
+`$ psql -U cloudant -d postgres -h postgres-host -f /opt/cloudant-specialapi/perfagent_postgres_drop.sql`
+and 
+`$ psql -U cloudant -d postgres -h postgres-host -f /opt/cloudant-specialapi/compactionagent_postgres_drop.sql`
+
+
+If ok, then setup the per\_minute cronjobs using the example in `/opt/cloudant-specialapi/crontab_example` see also [cron setup](#cron-based-collection-to-postgres) 
+
+1)	modify centos65-loader2.ibm.com to be your postgres-server hostname  
+2)	modify activesn.bkp.ibm.com to be your load-balancer logfile source  
+3)	add the line to root's crontab  
+4)	add a line for each load-balancer source if one server is collecting for two load-balancers.  
+
+Test the script by inspecting the table `verb_stats` using psql as above:  
+```
+select * from verb_stats where mtime = (select max(mtime) from verb_stats);
+```
+
+The logfile `/var/log/cloudant_perfagent.log` provides run-by-run logging of the cronjob.   
+
+You can also debug by looking at the mail output of the cronjob, and also by commenting out the `set -x` line in `/opt/cloudant-specialapi/perfagent_cronscript/perfagent_every_minute.sh`
+
+### grafana server
+Grafana is installed via yum on its server. Grafana is frequently updated. The instructions below are an example and apply to grafana-4.6.3-1 only.
+
+For RHEL7.4, do this as root:
+1)	`$ yum -y install https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-2.noarch.rpm`
+2)	`$ yum -y install postgresql94`
+3)	`yum -y install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-4.6.3-1.x86_64.rpm`
+4)	`systemctl enable grafana-server`
+5)	`systemctl restart grafana-server`
+
+Grafana is configured via the web on port 3000.  
+Access grafana with account 'admin/admin'. Change credentials as you wish.
+
+1)	Set up a datasource: 
+
+```
+a)	type = PostgreSQL  
+b)	host = postgreshost:5432  
+c)	database = postgres  
+d)	user = cloudant  
+e)	password = cloudant  
+f)	SSL mode = disable  
+g)	name = cloudantstats 
+```   
    
 2)	Populate dashboards using a browser:  
 
