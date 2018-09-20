@@ -32,16 +32,28 @@ def execute_volumedata_collect(sess,clusterurl,resultid,results_location):
     index = 0
     for db in data:
       db_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db),2,None)
+      shards_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_shards',2,None)
       if db_response is not None:
        dbdata = db_response.json()
+       shardcount = 0
+       if shards_response is not None:
+         shardsdata = shards_response.json()
+         if 'shards' in shardsdata:
+           shardcount = len(shardsdata['shards'])
        dbstring = str(index)+','+str(clusterurl)+','+str(db)+','+str(mtime)+','+str(mtime_epoch)+','+str(dbdata['doc_count'])+','+\
-       str(dbdata['doc_del_count'])+','+str(dbdata['disk_size'])+','+str(dbdata['data_size'])
+       str(dbdata['doc_del_count'])+','+str(dbdata['disk_size'])+','+str(dbdata['data_size'])+','+str(shardcount)
        log_entry(results_location,dbfile,dbstring)
       index = index+1
     vindex = 0
     for db in data:
       dbviews_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_all_docs?start_key="_design"&end_key="_design0"',2,None)
+      shards_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_shards',2,None)
       if dbviews_response is not None:
+       shardcount = 0
+       if shards_response is not None:
+         shardsdata = shards_response.json()
+         if 'shards' in shardsdata:
+           shardcount = len(shardsdata['shards'])
        dbviewsdata = dbviews_response.json()
        if 'rows' in dbviewsdata:
          for view in dbviewsdata['rows']:
@@ -53,7 +65,7 @@ def execute_volumedata_collect(sess,clusterurl,resultid,results_location):
                viewstring = str(vindex)+','+str(clusterurl)+','+str(db)+','+str(view['id'])+','+str(viewdata['name'])+','+str(viewindex['signature'])+','+\
                str(mtime)+','+str(mtime_epoch)+','+\
                str(viewindex['disk_size'])+','+str(viewindex['data_size'])+','+str(viewindex['sizes']['active'])+','+\
-               str(viewindex['updates_pending']['total'])+','+str(viewindex['updates_pending']['minimum'])+','+str(viewindex['updates_pending']['preferred'])
+               str(viewindex['updates_pending']['total'])+','+str(viewindex['updates_pending']['minimum'])+','+str(viewindex['updates_pending']['preferred'])+','+str(shardcount)
                log_entry(results_location,viewfile,viewstring) 
            vindex = vindex +1
 

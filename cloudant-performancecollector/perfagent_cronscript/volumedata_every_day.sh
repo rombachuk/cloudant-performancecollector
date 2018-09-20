@@ -9,9 +9,9 @@ viewfindfile="find /opt/cloudant-performancecollector/perfagent_results -name vi
 viewstatsfile=`eval $viewfindfile`
 dbpsqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"$now"dbrunner.sql"`
 viewpsqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"$now"viewrunner.sql"`
-dbbldpsqlfile=`echo "echo copy db_stats \(index,cluster,database,mtime,mtime_epoch,doc_count,del_doc_count,disk_size,data_size\) from \'"$dbstatsfile"\' delimiter \',\' csv > "$dbpsqlfile`
+dbbldpsqlfile=`echo "echo copy db_stats \(index,cluster,database,mtime,mtime_epoch,doc_count,del_doc_count,disk_size,data_size,shard_count\) from \'"$dbstatsfile"\' delimiter \',\' csv > "$dbpsqlfile`
 eval $dbbldpsqlfile
-viewbldpsqlfile=`echo "echo copy view_stats \(index,cluster,database,viewdoc,view,signature,mtime,mtime_epoch,disk_size,data_size,active_size,updates_pending_total,updates_pending_minimum,updates_pending_preferred\) from \'"$viewstatsfile"\' delimiter \',\' csv > "$viewpsqlfile`
+viewbldpsqlfile=`echo "echo copy view_stats \(index,cluster,database,viewdoc,view,signature,mtime,mtime_epoch,disk_size,data_size,active_size,updates_pending_total,updates_pending_minimum,updates_pending_preferred,shard_count\) from \'"$viewstatsfile"\' delimiter \',\' csv > "$viewpsqlfile`
 eval $viewbldpsqlfile
 sed -i 's/copy/\\copy/' $dbpsqlfile
 sed -i 's/copy/\\copy/' $viewpsqlfile
