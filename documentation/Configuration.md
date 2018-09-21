@@ -1,135 +1,139 @@
  
 #	Overview
-This works as described for api-based operation in 'link here', except : 
- 
-*	method  
--- the requests are made on the command line rather than an api call over REST  
-*	results collection  
--- outputformat=json  
-_results are stored in a cloudant database and must be collected via the \_api/perfagent via REST calls (see 'link')_  
--- outputformat=csv  
-_results appear in the results directory specified in the perfagent.conf file (or via -R option), and can be viewed from there_  
-* cron operation  
---	can be used to populate postgres ready for display in grafana (see 'link here')
-* metrics supported  
---	additional compaction.py agent is available to gather various metrics useful for database & view size monitoring, and especially for compaction management _(these are not callable via the \_/api/perfagent endpoint at present)_  
 
-Resource levels supported are:  
-  
-* all (ie whole cluster)
-* database
-* database + verb (ie reads, writes, deletes, etc)
-* database,verb,endpoint, where endpoint reflects grouping of requests to endpoint type  
--- _design (ddl operations)   
--- 	_find (all cloudantquery type calls)  
---	design/view (all map-reduce calls)  
---	documentlevel (all calls to individual docs)  
---	etc  
-*	database,verb,endpoint,document  
- (ie each distinct endpoint counted separate, including every individual document - only use sparingly since it often creates many rows)  
-  
-Time-Period granularity levels supported are:  
-  
-* minute, hour, day, all (the whole report-period)  
-  
-The component processes statistics by inspecting log files generated in the current active haproxy.  
-  
-Statistics reflect the content recorded by that proxy. If a proxy changeover has occurred in the report period requested, then the result is compromised. Consult your cluster dba for a record of such events.  
-  
-The log-inspection method is cpu-intensive and can frequently take several minutes, so requests to the api are processed via an operational queue.  
-  
-The perfagent component supports:  
-  
-* submission of statistics collect+process job to a queue, returning job id if accepted  
-* collection of status of a job and the result, using the jobid  
-  
-The user makes REST calls to the cluster _api/perfagent endpoint to achieve these operations.  
+The performancecollector is used to collect metrics every minute and every day.  
+The periods are controlled by the crontab of `root`.  
+The file `perfagent_cronscript/crontab_example` is provided as a template.
 
-The component supports the detection of threshold-breach conditions within the result. Event fields are placed in the result which identify any breaches.  
-  
-The job is submitted with a set of options supplied as parameters to the REST call:  
+The major items to configure are :
 
-* report period defined by 'fromtime' to 'totime'  
-* resource level defined by 'scope'  
-* time-period rollup defined by 'granularity'  
-* outputformat (json or csv)  
--- If csv, then results are stored in files which are referenced in the job response field  
--- if json, then stats and events are placed in the job response field  
-* location of input file to process
-* connection information for the queue (allows elevated passwords to change after job submission)
-  
-The component also supports parameters which allow the definition of:  
-    
-* stats exclusions, which means log entries meeting the exclusion criteria are ignored in stats collection  
-* threshold conditions with qualifiers, which are applied to stats results to look for breaches and create events in the results  
-* event exclusions, which means that stats results meeting the exclusion criteria do not have events generated for them, even threshold conditions are breached
-    
-Defaults are applied if parameters are omitted. These are set in a configuration file by the specialapi operator (typically the cluster dba team).  
-  
-Only those users listed in csapi_users file will be authorised.
-The REST call can use either a AuthSession cookie, or basic authentication.  
+* crontab file for `root` 
+* cluster access details (eg with password updates)
 
-The API will test the credentials supplied in the REST call against the cluster cluster-port authentication scheme. Invalid credentials at point of test will mean the call is rejected.   
+You may find after operating the collection for some time that you want to ignore data or thresholds and you can do this via exclusions and the thresholds file.
 
-#	Using the command line
-The command line works exactly as the api, but instead of using a REST call with curl or code, you invoke the python script 
+
+# Configuration Items
+
+### Proxy data format
+
+This is relevant to proxydata and clientdata collectors.
+
+This is achieved through configuration file **perfagent-collect.conf**
+
+Align the base index in this file with the Number of logline tokens (fields) set up in the haproxy.log files (usually either 17 or 19), for example with no captures in the haproxy.log we would have :
+
+base_index 17
+
+### Cluster access details
+
+This is relevant to metricsdb and volumedb collectors.
+
+This is achieved through configuration file **perfagent_connection.info**
+
+Set up the access url and credentials for the cluster.
 
 ```
-$ python perfagent.py [..options...]
+clusterurl      http://activesn.bkp.ibm.com  
+admincredentials    bWlk********3MHJk    
 ```
 
-The -O json option is not useful in this case. **Always use -O csv**, or set it as the default.  
+The clusterurl should be the vip of the cloudant local cluster.  
+The admin credentials shoud be a base64encoding of the string user:password where the user is a cluster admin user.  
 
-All the defaults and options apply in the same way. See 'link here' for the details.
+### Proxydata collector exclusions
+This is relevant to proxydata collectors.
 
-Logs go to /var/log/perfagent-collect.log and /var/log/csapi.log whether an api call or command line.
-username and password are taken from perfagent_connection.info.
+This is achieved through configuration file **perfagent\_stats\_exclusions.info**
 
-api call	command line equivalent
-curl -u middleamd:*** "http://activesn.bkp.ibm.com/_api/perfagent" -X POST	/usr/bin/python /opt/cloudant-specialapi/perfagent.py 
-curl -u middleamd:*** "http://activesn.bkp.ibm.com/_api/perfagent?outputformat=csv&fromtime=2018-01-16-22:00" -X POST	/usr/bin/python /opt/cloudant-specialapi/perfagent.py -O csv -f 2018-01-16-22:00
-curl -u middleamd:*** "http://activesn.bkp.ibm.com/_api/perfagent?scope=database&granularity=day&from=201601150000&totime=now&outputformat=json&logfilehost=activesn.bkp.ibm.com" -X POST	/usr/bin/python /opt/cloudant-specialapi/perfagent.py -s database -g day -f 201601150000 -t now -O json -H activesn.bkp.ibm.com
-not available via api call	/usr/bin/python /opt/cloudant-specialapi/compactionagent.py -x  /opt/cloudant-specialapi/perfagent_connection.info
+Proxy data is delineated by database that is accessed.
 
-#	Cron-based Collection to Postgres
- 
+Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
 
-The command line option can be used to setup regular minute-by-minute metrics collection, which is persisted to a _postgres_ database, for servicing the _grafana_ dashboards.
+Data from defined clientips can be excluded eg data from backup cluster ip addresses.
 
-Grafana only postgres or mysql as SQL type sources out-of-the-box.  
+See **Proxydata Collection Options** for more details.
 
-This mode of operation uses cron scripts to run commands on a rolling timerange -> typically from 2 minutes to 1 minute from now.
-The cron scripts run each minute.
+### Clientdata collector exclusions
+This is relevant to clientdata collectors.
+
+This is achieved through configuration file **clientdata\_stats\_exclusions.info**
+
+Client data is delineated by client that is making the call.
+
+Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
+
+See **Proxydata Collection Options** for more details. 
+
+The syntax for clientdata exclusions is the same as for proxydata. So you can exclude data for specific database rows even though the clientdata collector does not capture the database-level counts.
+
+### Event Detection exclusions
+This is relevant to proxydata collectors.
+
+This is achieved through configuration file **perfagent\_events\_exclusions.info**
+
+Some proxy data lines data can be excluded from event-sensing to avoid unwanted repeated events or other reasons.
+
+Use this file to define what you wish to ignore. 
+See **Proxydata Collection Options** for more details. 
+
+### Event Condition Thresholds
+This is relevant to proxydata collectors.
+
+This is achieved through configuration file **perfagent\_events\_thresholds.info**
+
+Use this file to define what you wish to signal as the limit for eventing. See the configuration documentation for more details.
+
+
+### Crontab configuration
+
+Once the software is newly deployed, then the root user cron must be configured for periodic operation. It is recommended that :
+
+* `proxydata_every_minute verb` is enabled on each load-balancer (linked to local haproxy.log file)  
+* `clientdata_every_minute verb` is enabled on each load-balancer (linked to local haproxy.log file)  
+* `proxydata_every_minute endpoint` is **disabled** on each load-balancer (linked to local haproxy.log file) and used only for investigative work
+* `metricsdbdata_every_minute entry` is enabled on _just one_ load-balancer (using the vip cluster address means it works even when it is not the primary)  
+* `volumedata_every_day` is enabled on _just one_ load-balancer (using the vip cluster address means it works even when it is not the primary)
+
+#### Example
+
+The template file **crontab_example** provided has the following content :
+
+```
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/clientdata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+#* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh endpoint 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/metricsdbdata_every_minute.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+30 11 * * * /opt/cloudant-performancecollector/perfagent_cronscript/volumedata_every_day.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+
+```
+The lines can be copied to root's crontab, and the following adjustments made :
+
+* change `ldap.bkp.ibm.com` to the postgres hostname you have set up in the installation process
+* change `cl11c74lb1.ibm.com` to the hostname of the loadbalancer that the script is running on.   
+-- You need to set this up on each loadbalancer.   
+-- It ensures that either load balancer can load data into postgres for the same minute during a switchover
+* change `30 11` to the time of day you want volumedata collected
+
 ##	Cron Operation Summary
 It is convenient to set up a regular cronscript to capture data every minute, and display it on a dashboard.
 
-Two scripts are provided :- 
+Four scripts are provided :- 
  
 * perfagent\_every\_minute.sh  
+-- 	processes data in haproxy.log files
+* clientdata\_every\_minute.sh  
 -- 	processes data in haproxy.log files  
-* compactionagent\_every\_minute.sh  
--- reads data from cluster via REST 
+* metricsdbdata\_every\_minute.sh  
+-- reads data from cluster (metricsdb) via REST 
+* volumedata\_every\_day.sh  
+-- reads data from cluster (every db) via REST 
+
 
 ### perfagent script (haproxy data)
-The first script is used to populate one of ```[database_stats | verb_stats | endpoint_stats]``` tables in postgres, depending on the scope parameter ($1) used. It can be called several times to fill in the different scope levels, as required.
+The script is used to populate one of `[database_stats | verb_stats | endpoint_stats]` tables in postgres, depending on the scope parameter (\$1) used. It can be called several times to fill in the different scope levels, as required.
 
-### compactionagent script (metrics db data)
-The second script is used to populate the following performance data tables in postgres: 
- 
-* db\_stats  
-* view\_stats  
-* smoosh\_stats  
-* ioq\_stats  
-* host\_stats  
-
-### example script
-The provided example (/opt/cloudant-specialapi/perfagent\_cronscript/crontab\_example) can be used as a template to adjust to your particular setup.  It runs 'perfagent\_every\_minute' at both verb and endpoint scope levels. It runs compactionagent as well.  
-##	HAproxy Collection (perfagent\_every\_minute.sh)  
-
-### Overview  
-A script, provided in directory /opt/cloudant-specialapi/crontab_example is given as an example. This is designed to be used with postgres as a target database, and grafana as a dashboard tool. But this can be adapted readily for other SQL-like datasources and reporting tools.
-
-### Options  
+#### Options  
 The script uses the command line option and requires parameters for:-  
 
 *	($1) scope of stats capture - one of [all | database | verb | endpoint | document]
@@ -141,7 +145,7 @@ The script uses the command line option and requires parameters for:-
 
 The start-period is typically 2, and the end-period is typically 1. This means the data is 1 minute old at time of collection.
 
-### Characteristics
+#### Characteristics
 The script has the following characteristics:  
 
 *	runs in crontab for root on the server where perfagent is installed.   
@@ -160,116 +164,27 @@ tail -n 500000 /var/log/haproxy.log | grep $fromgrep > $logfile
 
 The script has been optimised to run as quickly as possible, so that the perfagent can run on both production load-balancers. However, load-balancer cpus can be freed if rsyslog is used to pipe the haproxy.log file to another server. See 'links here'
 
-### Example
-Set up crontab  :-  
+### clientdata script (haproxy data)
+The script is used to populate one of `[client_stats | client_verb_stats | client_endpoint_stats]` tables in postgres, depending on the scope parameter ($1) used. It can be called several times to fill in the different scope levels, as required.
 
-```
-[root@activesn perfagent_cronscript]# crontab -l
-* * * * * /opt/cloudant-specialapi/perfagent_cronscript/perfagent_every_minute.sh verb 2 1 centos65-loader2.ibm.com activesn.bkp.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
-* * * * * /opt/cloudant-specialapi/perfagent_cronscript/perfagent_every_minute.sh endpoint 2 1 centos65-loader2.ibm.com activesn.bkp.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
-``` 
-
-In this example  
+### metricsdbdata script (cluster metricsdb database)
+The script is used to populate the following performance data tables in postgres: 
  
-*	it runs every minute, via root crontab, with errors not sent to email (remove the redirect to /dev/null to see errors in emails)
-*	two runs are made - one at verb level, and one at the deeper endpoint level > so the 'verb_stats' and 'endpoint_stats' table is populated in postgres
-*	the period that stats are captured for is 'now-2minutes to now-1minute'
-*	the postgres server runs on centos65-loader2.ibm.com
-*	the perfagent actually runs on the load-balancer host, and the logfilehost is activesn.bkp.ibm.com
-*	the cluster is identified in the /opt/cloudant-specialapi/perfagent_connection.info file and this cluster-id is written on each row, so that the dashboards can be used with many clusters.
+* host\_stats  
+* smoosh\_stats  
+* ioq\_stats  
 
-The log in /var/log/cloudant\_perfagent.log for a typical entry shows  
+This script is designed to collect the 'latest' information from the cluster, and be run every minute. 
 
-```
-2018-01-29 19:00:02,792[execute_collect] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] time-boundary [201801291858-201801291859] Start
-2018-01-29 19:00:02,795[find_dbstats] (MainProcess) {cloudant performance agent} Start of time boundary detected <201801291858> at line <1>
-2018-01-29 19:00:02,799[execute_collect] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] Log Lines Found = [36]
-2018-01-29 19:00:02,930[execute_collect] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] Resource Groups Found = [4]
-2018-01-29 19:00:02,933[generate_stats_output] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] Stats Lines Generated = [4]
-2018-01-29 19:00:02,940[generate_events_output] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] Event Lines Generated = [0]
-2018-01-29 19:00:02,940[execute_collect] (MainProcess) {cloudant performance agent} Request Processing for id [201801291900792585] End
-```  
-## compactionagent script (metrics-db derived data)
-### Overview
-A script, provided in directory /opt/cloudant-specialapi/crontab_example is given as an example. This is designed to be used with postgres as a target database, and grafana as a dashboard tool. But this can be adapted readily for other SQL-like datasources and reporting tools.
+The metrics database has a 1 minute lag in timestamping its data. This can lead to lags between compaction and perfagent (haproxy) timestamps, and data point gaps in grafana dashboards.
 
-### Options
-The script uses the command line option and requires parameters for:-  
 
-*	($1) hostname for postgres server
-*	($2) connection-info file (credentials) to cluster that is source of metrics
-
-### Characteristics
-The script has the following characteristics:  
-
-*	runs in crontab for root on the server where perfagent is installed. 
-*	accesses the cluster via python REST calls to gather data useful for compaction monitoring
-*	accesses the cluster via python REST calls to gather some data from the metrics database which must be active and populated each minute 
-*	generates csv output for each of the statistics levels collected (db,view,ioq,smoosh,host). 
-*	writes the csv output content to the 'postgres' database as user 'cloudant' on hostname given by parameter $1 (can be changed by editing the perfagent\_every\_minute.sh file)
-*	deletes temporary files and the results once it has loaded
-
-This script is designed to collect the 'latest' information from the cluster, and be run every minute. The metrics database has a 1 minute lag in timestamping its data. This can lead to lags between compaction and perfagent (haproxy) timestamps, and data point gaps in grafana dashboards.
-
-Example
-[root@activesn perfagent_cronscript]# crontab -l
-* * * * * /opt/cloudant-specialapi/perfagent_cronscript/compactionagent_every_minute.sh centos65-loader2.ibm.com /opt/cloudant-specialapi/perfagent_connection.info > /dev/null 2>&1
-
-In this example 
-•	it runs every minute, via root crontab, with errors not sent to email (remove the redirect to /dev/null to see errors in emails)
-•	one run is needed which collects all the necessary stats
-•	the period is always just the last minute
-•	the postgres server runs on centos65-loader2.ibm.com
-•	in this case the compactionnagent actually runs on the load-balancer host. If you have 2 load-balancers, run this script on only one of them.  
-   
-2)	Populate dashboards using a browser:  
-
-```
-a) from /opt/cloudant-specialapi/grafana_dashboards copy the dashboards to your desktop client pc or mac. 
-b) Then import via grafana home page. Choose cloudantstats as your datasource.
-```
-
-3)	Adjust the templating to fit your project naming and sharding:  
-
-a) The dashboards use templating to delineate projects (using _ as the project boundary marker), and also to set node numbers per cluster. Change this logic in the Settings->Templating to suit your particular cluster names and node numbers and sharding setup.
-
-_default SQL for project variable_ 
+### volumedata script (cluster metadata)
+The script is used to populate the following performance data tables in postgres: 
  
-```
-SELECT CASE WHEN substring(database,0,position('_' in database)) = ''   
-THEN 'others' ELSE substring(database,0,position('_' in database)) END as project  
-from db_stats where cluster=$cluster and database is not null   
-group by project order by project
-```			
+* db\_stats  
+* view\_stats 
 
-_default SQL for num\_nodes_  
+This script is designed to collect the 'latest' information from the cluster, and be run every day. 
 
-```
-SELECT case when cluster like '%activesn.bkp.ibm.com' then 1  
- when cluster like '%cl11c74vip.ibm.com' then 3 else 3 end   
- from smoosh_stats where cluster=$cluster
-```  
-_default SQL for shards\_per\_node variable_
-
-```
-SELECT case when cluster like '%activesn.bkp.ibm.com' then 8  
-when cluster like '%cl11c74vip.ibm.com' then 8 else 8 end   
-from smoosh_stats where cluster=$cluster
-```  
-
-4)	Inspect tha plots refresh each minute  
- 
-* If postgres is receiving stats from perfagent, and the compactionagent, you should see plots immediately, they refresh each minute.  
-
-5)	Adjust plot using standard grafana features to select individual dbs and other parameters.  
-
-6)	The panel can be modified by   
-
-* selecting the title and clicking edit.
-* One very useful option is to go to 'Display' and change Hover Tooltip-> StackedValue to cumulative. This shows a total in the hover. You can switch it back to individual as suits.
-
-#### Example dashboard
-
-[dashboard]: dashboard.png
-![dashboard]
  

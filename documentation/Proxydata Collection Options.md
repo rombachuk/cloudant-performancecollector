@@ -427,6 +427,39 @@ use as failure counter, and qualifier for thresholds.
 Key effectiveness measure for this resource-level.
 ```	
 
+# Data Exclusions
+Data exclusions are defined in a file on the server :
+
+*  perfagent\_stats\_exclusions.info (proxydata collector)
+*  clientdata\_stats\_exclusions.info (clientdata collector)
+
+### Examples
+```
+{"verb":"GET","endpoint":"_changes"}
+{"verb":"GET","endpoint":"none"}
+{"clientip":"192.168.254.68"}
+
+```
+
+The effect of the example is to exclude from metrics proxy.log entries matching :
+
+```
+IF verb='GET' and endpoint='_changes' OR  
+IF verb='GET' and endpoint='none' OR 
+IF clientip = '192.168.254.68'
+```
+
+### Notes
+
+1) If there is a deeper scope present then it applies to all lines matching the condition shown.  
+
+2) Use clientip to ignore data from specific REST clients. You can use the clientdata collector to ensure data from all clients is still collected. It has a separate exclusion file.
+
+3) .* is the wildcard operator (regex logic)
+
+4) You can use exclusions in investigative work to collect data from a narrow target
+
+
 
 # Event Thresholds
 Event thresholds are defined in a file on the server (perfagent_thresholds.info)
