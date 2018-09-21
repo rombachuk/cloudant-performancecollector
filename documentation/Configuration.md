@@ -31,16 +31,16 @@ This is relevant to metricsdb and volumedb collectors.
 
 This is achieved through configuration file **perfagent_connection.info**
 
-Set up the access url and credentials for the cluster.
-
+Set up the access url and credentials for the cluster.  
+  
 ```
 clusterurl      http://activesn.bkp.ibm.com  
 admincredentials    bWlk********3MHJk    
 ```
-
+  
 The clusterurl should be the vip of the cloudant local cluster.  
 The admin credentials shoud be a base64encoding of the string user:password where the user is a cluster admin user.  
-
+  
 ### Proxydata collector exclusions
 This is relevant to proxydata collectors.
 
