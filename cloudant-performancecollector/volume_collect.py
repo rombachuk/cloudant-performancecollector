@@ -74,7 +74,7 @@ def execute_volumedata_collect(sess,clusterurl,resultid,results_location):
   logging.warn('{Cloudant volume performancecollector} Error : '+str(e))
   return False
  
-defaults_file = "/opt/cloudant-specialapi/perfagent.conf"
+defaults_file = "/opt/cloudant-performancecollector/perfagent.conf"
 logfilename = '/var/log/volumeagent.log'
 logging.basicConfig(filename = logfilename, level=logging.WARN,
                     format='%(asctime)s[%(funcName)-5s] (%(processName)-10s) %(message)s',
