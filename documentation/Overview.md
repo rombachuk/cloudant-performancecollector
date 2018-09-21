@@ -28,16 +28,19 @@ This feature provides statistics at a finer scope than available from the metric
   
 Collection is supported for:  
   
-* per-database metrics using haproxy log sources
-* per-host and per-type metrics using metricsdb database source
-* per-database and per-view volume metrics using cluster dbs as data source  
+* per-database metrics using haproxy log sources (proxydata collector)
+* per-client metrics using haproxy log sources (clientdata collector)
+* per-host and per-type metrics using metricsdb database source (metricsdbdata collector)
+* per-database and per-view volume metrics using cluster dbs as data source (volume collector)
 
 Collection frequency is controlled by cron :  
   
-* haproxy and metricsdb sourced data are collected every minute.  
+* haproxy,client and metricsdb sourced data are collected every minute.  
 * cluster volume metrics are collected every day
 
-Cluster-volume and haproxy collection are practical only when the number of databases is small - several thousand or less.
+Cluster-volume and proxydata collection are practical only when the number of databases is small - several thousand or less.
+
+Clientdata collection is practical only when the number of distinct clientip addresses calling the cluster is small.
 
 In deployments using _10k databases or more_, constant periodic collection of haproxy and cluster-volume data **_should be disabled_**. Enabling these periodic collections is too intensive on the cluster and postgres storage. 
 
