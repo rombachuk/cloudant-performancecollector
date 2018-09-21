@@ -14,8 +14,8 @@ create index client_verb_stats_idx4 on client_verb_stats (mtime_epoch);
 create index client_verb_stats_idx5 on client_verb_stats (cluster,client,mtime_epoch,verb);
 create index client_verb_stats_idx6 on client_verb_stats (cluster);
 
-create index client_endpoint_stats_idx1 on client_endpoint_stats (database,mtime_epoch);
-create index client_endpoint_stats_idx2 on client_endpoint_stats (database,mtime_epoch,verb,endpoint);
+create index client_endpoint_stats_idx1 on client_endpoint_stats (client,mtime_epoch);
+create index client_endpoint_stats_idx2 on client_endpoint_stats (client,mtime_epoch,verb,endpoint);
 create index client_endpoint_stats_idx3 on client_endpoint_stats (cluster,client,mtime_epoch,verb,endpoint);
 create index client_endpoint_stats_idx4 on client_endpoint_stats (client);
 create index client_endpoint_stats_idx5 on client_endpoint_stats (mtime_epoch);

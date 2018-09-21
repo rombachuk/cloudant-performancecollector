@@ -38,6 +38,11 @@ then
  /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres_drop.sql -o volumeschema_drop.log
  echo 'creating new postgres volume-data schema'
  /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/volumedata_postgres.sql -o volumeschema_create.log
+  echo 'dropping existing postgres volume-data schema'
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/clientdata_postgres_drop.sql -o clientschema_drop.log
+ echo 'creating new postgres volume-data schema'
+ /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/clientdata_postgres.sql -o clientschema_create.log
+else
 else
  echo 'no postgres schema changes'
 fi
