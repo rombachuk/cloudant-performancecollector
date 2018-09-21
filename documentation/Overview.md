@@ -56,39 +56,47 @@ The performancecollector supports:
 * multiple threshold checks against any haproxy-derived metric
 * multiple exclusion conditions either for metric or item
 * absolute thresholds not adaptive thresholds
+
+This feature is supported for the proxydata collector. 
+It allows event files to be produced if the collected values breach a threshold.
+
+Thresholds are defined in json format and support criteria based on combinations of :
+
+* resource value eg verb=GET, database=phe.*
+* metric value eg travg > 50
+* qualifiers eg only fire when trcount > 20
+
     
 ## Investigation using cron 
+
+This feature allows more detailed/granular metrics to be collected for short periods. 
+
+This can mean :
+
+* increasing the resource levels of metrics from per-database to per-database-endpoint (proxydata or clientdata)
+* increasing the collection rate from per-day to per-hour or per-minute (volumedata)
+
+Dashboards are available to support these types of investigation.
  
 The performancecollector supports a powerful set of options to process investigative collections of haproxy data at various resource levels (scope) and time-rollups (granularity).   
 
 The user can build shell scripts with these options and feed postgres and grafana. Custom schema creation and dashboard building may be required. 
  
-Two investigative features with example shellscripts and dashboard support are provided in the standard delivery : 
- 
-* per-minute metrics at database-verb-endpoint scope level.  
--- deeper than the standard database-verb level  
--- particularly useful for POST verb  
--- volume and response rates for \_find, or \_index etc.  
--- additional dashboard available (Cluster Overview by Endpoint)  
-
-* per-minute/hour metrics for cluster volume data.  
--- more frequent than the standard per-day collection  
--- useful for compaction status tracking   
--- useful for volume build-up rates in load testing  
--- increased time granularity is supported on standard volume dashboards
 
 Consult the **Investigation using Cron** documentation for further information.
 
 ## Investigation using API 
- 
-The performancecollector supports a powerful set of options to process investigative collections of haproxy data at various resource levels (scope) and time-rollups (granularity). 
 
-These can be used to make REST-based asynchronous collection requests via the cloudant-specialapi :  
+This feature is supported for proxydata.
+
+This feature is intended to allow detailed one-time collections using an api call :  
 
 * user makes a POST request to the cluster \_api/perfagent endpoint with the required options
 * successful submission results in a returned documentid with status 'submitted'
 * on completion of the collection, the status is marked 'completed'
-* results for metrics and threshold-events are made available as json within the document for collection from the cluster database **_apiperfagentqueue_** 
+* The results are placed in JSON format by the performancecollector into the job document which can be read via the api. The job is marked completed once the results are placed. 
+
+Consult the **Investigation using API** and **ProxyData Collection Options** for details.
 
 Requests are processed through a queue to prevent mass-parallel collection and a cpu hit on the load-balancer. 
  
