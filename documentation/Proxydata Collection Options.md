@@ -24,7 +24,7 @@ If parameters are omitted, a default value is used, which is set in  `/opt/cloud
 
 This section shows the long and short form of each option, and the standard default. Datetime parameters can be specified up to minute granularity.
 
-###totime 
+### totime 
 
 * longform     `totime`
 * shortform    `t`	
@@ -49,7 +49,7 @@ You can use the following separators which are ignored :-/_
 eg 2018-01-16_12:00 is ok
 ```
 
-###scope 
+### scope 
 
 * longform     `scope`
 * shortform    `s`	
@@ -62,7 +62,7 @@ Note that:
 verb means [database,verb]
 endpoint means [database,verb,endpoint]
 ```
-###granularity 
+### granularity 
 
 * longform     `granularity`
 * shortform    `g`	
@@ -85,7 +85,7 @@ Using csv for an api call will result in files on the server.
 Operations teams wil have to retrieve these. 
 Not recommended to change defaults.
 ```
-###logfilehost 
+### logfilehost 
 
 * longform     `logfilehost`
 * shortform    `H`	
@@ -99,7 +99,7 @@ The dashboard then sums the data and so shows the total from both load-balancers
 Use if capturing data from both primary and secondary load-balancers: only relevant in periodic collection.   
 For adhoc, api or short-period collections, the active lb is likely to be constant.
 ```
-###inputlogfile 
+### inputlogfile 
 
 * longform     `inputlogfile `
 * shortform    `L`	
@@ -110,7 +110,7 @@ For adhoc, api or short-period collections, the active lb is likely to be consta
 This parameter is used to indicate the file containing proxy data.
 ```
 
-###certverif 
+### certverif 
 
 * longform     `certverif `
 * shortform    `none`	
@@ -123,7 +123,7 @@ If True then the default_requests_ca_bundle entry is used as the bundle file
 (default is /opt/cloudant-performancecollector/ca.pem)
 ```
 
-###connectioninfo 
+### connectioninfo 
 
 * longform     `connectioninfo `
 * shortform    `x`	
@@ -134,7 +134,7 @@ If True then the default_requests_ca_bundle entry is used as the bundle file
 How the queue processor should login to the cluster to save results.
 (default is /opt/cloudant-performancecollector/ca.pem)
 ```
-###resultslocation 
+### resultslocation 
 
 * longform     `resultslocation `
 * shortform    `R`	
@@ -144,7 +144,7 @@ How the queue processor should login to the cluster to save results.
 ```
 Directory to place results files if outputformat is csv. Used only by cron, not the api.
 ```
-###thresholdsfile 
+### thresholdsfile 
 
 * longform     `thresholdsfile `
 * shortform    `T`	
@@ -157,7 +157,7 @@ Test if resource-level is true and stat meets criteria and qualifier meets crite
 Use qualifier to ignore low traffic rows.
 ```
 
-###eventsexclusionsfile 
+### eventsexclusionsfile 
 
 * longform     `eventsexclusionsfile `
 * shortform    `E`	
@@ -171,7 +171,7 @@ Within each line, criteria are AND'd
 Within the files, the lines are OR'd
 ```
 
-###statsexclusionsfile 
+### statsexclusionsfile 
 
 * longform     `statsexclusionsfile `
 * shortform    `E`	
@@ -189,7 +189,7 @@ The job document is returned as json.
 
 This section describes the result fields returned. 
 
-###_id 
+### _id 
 
 * allowed `set as submissiontime down to microeconds`
 * usage  `cloudant unique id for document`
@@ -197,7 +197,7 @@ This section describes the result fields returned.
 ```
 returned as id field of submission response.
 ```
-###_rev 
+### _rev 
 
 * allowed `set by cloudant`
 * usage  `cloudant revision`
@@ -206,7 +206,7 @@ returned as id field of submission response.
 returned as id field of submission response.
 ```
 
-###requester 
+### requester 
 
 * allowed `set by api`
 * usage  `useraccount of job submitter`
@@ -214,7 +214,7 @@ returned as id field of submission response.
 ```
 for api - extracted from cookie or from basicauth header
 ```
-###status 
+### status 
 
 * allowed `submiited,processing,failed,success`
 * usage  `marker of progress for operational queue`
@@ -223,7 +223,7 @@ for api - extracted from cookie or from basicauth header
 for api - queue only runs entries marked submitted - 
 so updating the status to failed or canceled will drop it from the queue
 ```
-###info 
+### info 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `failure reason`
@@ -231,7 +231,7 @@ so updating the status to failed or canceled will drop it from the queue
 ```
 for api - may not be present in json if success
 ```
-###qtime 
+### qtime 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `time of submission in epoch`
@@ -239,7 +239,7 @@ for api - may not be present in json if success
 ```
 used to order queue, so smallest qtime goes first
 ```
-###submitted 
+### submitted 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `time of submission in human readbale format`
@@ -257,7 +257,7 @@ pretty format - submissiontime
 pretty format - updatetime - updated during life of job, =completed time once completed
 ```
 
-###completed 
+### completed 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `time of completion in human readbale format`
@@ -266,7 +266,7 @@ pretty format - updatetime - updated during life of job, =completed time once co
 pretty format -  success or fail time
 ```
 	
-###opts 
+### opts 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `list of the options submitted to job`
@@ -275,7 +275,7 @@ pretty format -  success or fail time
 if options are omitted from request.params string, then defaults apply, and those used are listed.
 ```
 
-###response.statsfile (csv option only)
+### response.statsfile (csv option only)
 
 * allowed `set by cloudant-performancecollector`
 * usage  `name of file on api-server which has the stats`
@@ -284,7 +284,7 @@ if options are omitted from request.params string, then defaults apply, and thos
 csv option only 
 ```
 
-###response.eventsfile (csv option only)
+### response.eventsfile (csv option only)
 
 * allowed `set by cloudant-performancecollector`
 * usage  `name of file on api-server which has the events`
@@ -293,7 +293,7 @@ csv option only
 csv option only 
 ```
 
-###response.stats (json option only - api)
+### response.stats (json option only - api)
 
 * allowed `set by cloudant-performancecollector`
 * usage  `array of stats entries`
@@ -306,7 +306,7 @@ resource-level will be at scope level.
 ```
 See section **Metrics** for list of expected metrics.
 
-###response.events (json option only - api)
+### response.events (json option only - api)
 
 * allowed `set by cloudant-performancecollector`
 * usage  `array of events entries`
@@ -320,11 +320,11 @@ They do not appear as clear if cleared since last job ie no check of previous ru
 ```
 
 
-#Metrics Supported
+# Metrics Supported
 For metrics, a set of values are calculated in the rollup, usually min/avg/max/count/sum.
 The following measurements are supported :
 
-###tq : client send time (ms)
+### tq : client send time (ms)
 
 * aggregations `min,avg,max,count,sum`
 * description  `Time spent by client sending request to cloudant`
@@ -336,7 +336,7 @@ These values are always high for _changes endpoints since long-polling is in ope
 Default is to exclude these rows to avoid stats distortion.
 ```
 
-###tr : cloudant process time (ms)
+### tr : cloudant process time (ms)
 
 * aggregations `min,avg,max,count,sum`
 * description  `Time in ms spent being processed by cloudant engine up to point of first byte being printed back`
@@ -345,7 +345,7 @@ Default is to exclude these rows to avoid stats distortion.
 Query processing time. Key measure of view speed. 
 Full document scans can occur if keys are wide as in equivalent SQL cases.
 ```
-###ttr : (tt-tr) end-to-end process time, excluding cloudant processing (ms)
+### ttr : (tt-tr) end-to-end process time, excluding cloudant processing (ms)
 
 * aggregations `min,avg,max,count,sum`
 * description  `Time in ms not spent in cloudant processing`
@@ -354,25 +354,23 @@ Full document scans can occur if keys are wide as in equivalent SQL cases.
 Useful in capturing large results sets.
 Since this is the time spent printing back the result to the client, after first byte.
 ```
-###tt : end-to-end process time, including cloudant processing (ms)
+### tt : end-to-end process time, including cloudant processing (ms)
 
 * aggregations `min,avg,max,count,sum`
-* description  `Total time receiving, processing and printing back response.`
-
+* description  `Total time receiving, processing and printing back response.`  
+  
 ```
 Useful in capturing either large results set or slow queries/inserts.
-```	
-
-###sz : size of response (bytes)
+```
+### sz : size of response (bytes)
 
 * aggregations `min,avg,max,count,sum`
 * description  `Size of response`
 
 ```
 Useful in capturing large results sets.
-```	
-
-###st2 : successful REST calls 2XX
+```
+### st2 : successful REST calls 2XX
 
 * aggregations `min,avg,max,count,sum`
 * description  `response status in range 2**`
@@ -382,8 +380,7 @@ Successful calls.
 count is measure of successful traffic	
 avg is of questionable value. 
 Use as success counter, and qualifier for thresholds.
-```	
-
+```
 ###st3 : failed REST calls reason 3XX
 
 * aggregations `min,avg,max,count,sum`
@@ -395,7 +392,7 @@ count is measure of failed traffic of redirect errors
 avg is of questionable value.
 use as failure counter, and qualifier for thresholds. 
 usually 0
-```	
+```
 ###st4 : failed REST calls reason 4XX
 
 * aggregations `min,avg,max,count,sum`
@@ -406,7 +403,7 @@ Failed calls.
 count is measure of failed traffic of errors caused by rejected calls 
 avg is of questionable value.
 use as failure counter, and qualifier for thresholds. 
-```	
+```
 ###st5 : failed REST calls reason 5XX
 
 * aggregations `min,avg,max,count,sum`
@@ -417,7 +414,7 @@ Failed calls.
 count is measure of failed traffic of server-side errors
 avg is of questionable value.
 use as failure counter, and qualifier for thresholds.
-```	
+```
 ###stfailpct : failed REST calls percentage
 
 * aggregations `min,avg,max,count,sum`
@@ -425,8 +422,7 @@ use as failure counter, and qualifier for thresholds.
 
 ```
 Key effectiveness measure for this resource-level.
-```	
-
+```
 # Data Exclusions
 Data exclusions are defined in a file on the server :
 
