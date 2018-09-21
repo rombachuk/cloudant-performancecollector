@@ -1,5 +1,5 @@
  
-#	Overview
+# Overview
 
 The performancecollector is used to collect metrics every minute and every day.  
 The periods are controlled by the crontab of `root`.  
@@ -39,9 +39,10 @@ admincredentials    bWlk********3MHJk
 ```
   
 The clusterurl should be the vip of the cloudant local cluster.  
-The admin credentials shoud be a base64encoding of the string user:password where the user is a cluster admin user.  
-  
-### Proxydata collector exclusions
+The admin credentials shoud be a base64encoding of the string user:password where the user is a cluster admin user.
+
+### Proxydata collector exclusions  
+
 This is relevant to proxydata collectors.
 
 This is achieved through configuration file **perfagent\_stats\_exclusions.info**
@@ -54,7 +55,8 @@ Data from defined clientips can be excluded eg data from backup cluster ip addre
 
 See **Proxydata Collection Options** for more details.
 
-### Clientdata collector exclusions
+### Clientdata collector exclusions  
+
 This is relevant to clientdata collectors.
 
 This is achieved through configuration file **clientdata\_stats\_exclusions.info**
@@ -67,7 +69,8 @@ See **Proxydata Collection Options** for more details.
 
 The syntax for clientdata exclusions is the same as for proxydata. So you can exclude data for specific database rows even though the clientdata collector does not capture the database-level counts.
 
-### Event Detection exclusions
+### Event Detection exclusions  
+
 This is relevant to proxydata collectors.
 
 This is achieved through configuration file **perfagent\_events\_exclusions.info**
@@ -115,7 +118,8 @@ The lines can be copied to root's crontab, and the following adjustments made :
 -- It ensures that either load balancer can load data into postgres for the same minute during a switchover
 * change `30 11` to the time of day you want volumedata collected
 
-##	Cron Operation Summary
+##	Cron Operation Summary  
+
 It is convenient to set up a regular cronscript to capture data every minute, and display it on a dashboard.
 
 Four scripts are provided :- 
