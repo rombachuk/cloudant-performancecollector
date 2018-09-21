@@ -9,8 +9,8 @@
 The overall architecture for performancecollector has :  
 
 *	each load-balancer (A,B) forwards latest proxy data to the  performancecollector (C)
-*	processing of [proxy],[metricsdb] and [cluster volume] data into metrics by the performancecollector
-*   metrics are checked against thresholds to generate `events` files which can be used by an event-tool `eg IBM Netcool` to signal failure modes to admin operators
+*	processing of [proxy],[client],[metricsdb] and [cluster volume] data into metrics by the performancecollector
+*   proxy metrics are checked against thresholds to generate `events` files which can be used by an event-tool `eg IBM Netcool` to signal failure modes to admin operators
 *	periodic (per-minute or daily for cluster-volumes) delivery of metrics into postgres database (D) from the performancecollector
 *	grafana server (E) and connects to postgres datasource. 
 *  user runs grafana dashboard on his browser which presents data from the datasource
@@ -221,8 +221,8 @@ Several steps are needed :
   
 * configure haproxy token setup in `cloudant-performancecollector/perfagent_collect.conf`
 * configure cluster access for metricsdb based stats in `cloudant-performancecollector/perfagent_connection.info`
-* configure exclusions for data collection
-* configure exclusions and thresholds for event-detection
+* configure exclusions for data collection (proxydata and clientdata)
+* configure exclusions and thresholds for event-detection (proxydata only)
 * run the deploy/clean_install.sh script
 * the installer will optionally build a new schema in postgres :  
 -- do this only on the first load-balancer install  
@@ -247,9 +247,23 @@ admincredentials    bWlk********3MHJk
 * The clusterurl should be the vip of the cloudant local cluster.
 * The admin credentials shoud be a base64encoding of the string `user:password` where the user is a cluster admin user.  
 
-#### Configuration of haproxy Data Exclusions (perfagent\_stats\_exclusions.info)
+#### Configuration of proxy Data Exclusions (perfagent\_stats\_exclusions.info)
+
+Proxy data is delineated by database that is accessed.
 
 Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
+
+Data from defined clientips can be excluded eg data from backup clusters.
+
+Use this file to define what you wish to ignore. See the configuration documentation for more details.
+
+#### Configuration of client Data Exclusions (clientdata\_stats\_exclusions.info)
+
+Client data is delineated by clientip that is interacting with the cluster.
+
+Database stats per client are not available.
+
+Per-client stats are useful in determining patterns of use by various REST clients.
 
 Use this file to define what you wish to ignore. See the configuration documentation for more details.
 
@@ -279,7 +293,9 @@ This script will :
 #### Crontab configuration
 Once the software is newly deployed, then the `root` user cron must be configured for periodic operation. It is recommended that :  
  
-* proxydata\_every\_minute entry is enabled on each load-balancer (linked to local haproxy.log file)
+* proxydata\_every\_minute verb entry is enabled on each load-balancer (linked to local haproxy.log file)
+* proxydata\_every\_minute endpoint entry is disabled on each load-balancer (linked to local haproxy.log file) and used only for investigative work
+* clientdata\_every\_minute verb entry is enabled on each load-balancer (linked to local haproxy.log file)
 * metricsdbdata\_every\_minute entry is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 * volumedata\_every\_day is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 

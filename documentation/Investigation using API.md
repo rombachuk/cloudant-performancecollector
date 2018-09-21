@@ -1,18 +1,46 @@
  
 #	Overview
 
-The user or application submits a job request to the \_api/perfagent endpoint for haproxy-data metrics collection :  
+ This feature is intended to allow detailed one-time collections using an api interaction :
 
-* proxy data lines within a specified timeperiod are included
-* stats are rolled up to a specified scope, the resource-level within the cluster
-* stats are rolled up to a specified granularity in time
-* detection of threshold breaches of stats matched against threshold rules, _defined in a file on the cloudant-performancecollector deployment_  
+* The /_api/perfagent endpoint is used to submit a job which is serviced by the cloudant-performancecollector tool.
+* The api tests the credentials supplied in the job submission REST call. Invalid credentials will mean the call is rejected and the job is not submitted.
+* The cloudant-performancecollector services one job at a time to limit the cpu usage overhead of performance collection and processing.
+* The results are placed in JSON format by the performancecollector into the job document which can be read via the api. 
+* The job is marked completed once the results are placed.
+* Once the job.status='success', the response field will contain  response.stats and response.events json fields.
+* Failed jobs will have status='failed' with job.info storing identified reasons.
 
-The user or application then polls the api for a result using the id returned from the accepted submission.
 
-Once the job.status='success', the response field will contain  response.stats and response.events json fields.  
+The results provide:
 
-Failed jobs will have status='failed' with job.info storing identified reasons.
+* cluster performance metrics broken down by resource level and time-period.
+* statistics at a finer scope than available from the metrics database
+* breakdown of traffic and performance response rates by database-sets which may reflect different users/projects/tasks sharing the same cluster
+
+Resource levels supported are:
+
+* all (ie whole cluster)
+* database
+database + verb (ie reads, writes, deletes, etc)
+* database,verb,endpoint where endpoint reflects grouping of requests to endpoint type  
+-- _design (ddl operations)  
+-- _find (all cloudantquery type calls)  
+-- design/view (all map-reduce calls)  
+-- documentlevel (all calls to individual docs
+  
+Time-Period granularity levels supported for the supplied start- and end- datetime are:
+
+* per-minute
+* per-hour
+* per-day
+* all (the whole report-period)
+
+Defaults are applied if parameters are omitted in the request. These are set in a configuration file cloudant-specialapi/perfagent.conf by the specialapi operator (typically the cluster dba team).
+
+The cloudant-performancecollector supports a wide range of options which include data exclusion lists and threshold detection. Consult **Proxydata Collection Options** for details.
+
+Only those users listed in csapi_users file will be authorised. The REST call can use either a AuthSession cookie, or basic authentication.
 
 # Examples
 The following examples show how api calls can be used to collect data. Missing options in the parameter list ?op1=1&op2=2 mean that defaults apply.   
