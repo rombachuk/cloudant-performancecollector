@@ -43,7 +43,6 @@ then
  echo 'creating new postgres volume-data schema'
  /usr/bin/psql -U cloudant -d postgres -h $host -f ../cloudant-performancecollector/clientdata_postgres.sql -o clientschema_create.log
 else
-else
  echo 'no postgres schema changes'
 fi
 echo 'completed'
