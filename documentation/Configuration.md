@@ -50,7 +50,7 @@ Proxy data is delineated by database that is accessed.
 
 Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
 
-Data from defined clientips can be excluded eg data from backup cluster ip addresses.
+Data from defined clientips can be excluded eg data from backup cluster ip addresses.  
 
 See **Proxydata Collection Options** for more details.
 
