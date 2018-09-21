@@ -37,7 +37,7 @@ eg 2018-01-16_12:00 is ok
 special value 'now' is allowed
 ```
 
-###fromtime 
+### fromtime 
 
 * longform     `fromtime`
 * shortform    `f`	
@@ -73,7 +73,7 @@ endpoint means [database,verb,endpoint]
 Defines timescope for rollup - more granular the more results.
 ```
 
-###outputformat 
+### outputformat 
 
 * longform     `outputformat`
 * shortform    `O`	
@@ -248,7 +248,7 @@ used to order queue, so smallest qtime goes first
 pretty format - submissiontime
 ```
 
-###updated 
+### updated 
 
 * allowed `set by cloudant-performancecollector`
 * usage  `time of last update in human readbale format`
@@ -381,7 +381,7 @@ count is measure of successful traffic
 avg is of questionable value. 
 Use as success counter, and qualifier for thresholds.
 ```
-###st3 : failed REST calls reason 3XX
+### st3 : failed REST calls reason 3XX
 
 * aggregations `min,avg,max,count,sum`
 * description  `response status in range 3**`
@@ -393,7 +393,7 @@ avg is of questionable value.
 use as failure counter, and qualifier for thresholds. 
 usually 0
 ```
-###st4 : failed REST calls reason 4XX
+### st4 : failed REST calls reason 4XX
 
 * aggregations `min,avg,max,count,sum`
 * description  `response status in range 4**`
@@ -404,7 +404,7 @@ count is measure of failed traffic of errors caused by rejected calls
 avg is of questionable value.
 use as failure counter, and qualifier for thresholds. 
 ```
-###st5 : failed REST calls reason 5XX
+### st5 : failed REST calls reason 5XX
 
 * aggregations `min,avg,max,count,sum`
 * description  `response status in range 5**`
@@ -415,7 +415,7 @@ count is measure of failed traffic of server-side errors
 avg is of questionable value.
 use as failure counter, and qualifier for thresholds.
 ```
-###stfailpct : failed REST calls percentage
+### stfailpct : failed REST calls percentage
 
 * aggregations `min,avg,max,count,sum`
 * description  `Percentage failure rate`
