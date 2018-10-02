@@ -96,7 +96,14 @@ def process_client_dbstatline(thisline,fromtime,totime,thislist,granularity,excl
     endpoint='unknown'
     clientip='unknown'
     params=None
-    lineparts = thisline.split()
+    thislineparts = thisline.split()
+    i = 0
+    basefound = False
+    while i < len(thislineparts) and not basefound:
+     if thislineparts[i] == 'HTTP/1.1"':
+       basefound = True
+     i=i+1
+    lineparts = thislineparts[:i]
     if len(lineparts) > 6 and 'haproxy' in thisline:
      try:
         linetime = datetime.datetime.strptime(lineparts[linetime_index][linetime_start:linetime_end],linetime_format).strftime('%Y%m%d%H%M')
