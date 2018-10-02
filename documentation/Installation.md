@@ -233,7 +233,7 @@ Several steps are needed :
 Do the installation as `root`
 
 #### Configuration (perfagent-collect.conf)
-Align the base index in this file with the Number of logline tokens (fields) set up in the haproxy.log files (usually either 17 or 19), for example with no captures in the haproxy.log we would have :
+Align the base index in this file with the index number of the 'HTTP/1.1' field in the haproxy.log files (usually either 17 or 19). Index starts at 0. For example with no captures in the haproxy.log we would have :
 
 `base_index	17`
 

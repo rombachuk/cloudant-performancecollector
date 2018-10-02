@@ -1,6 +1,8 @@
  
 # Overview
 
+_**This document revision applies to release `27.2.1` and after.**_ 
+
 The performancecollector is used to collect metrics every minute and every day.  
 The periods are controlled by the crontab of `root`.  
 The file `perfagent_cronscript/crontab_example` is provided as a template.
@@ -103,20 +105,22 @@ Once the software is newly deployed, then the root user cron must be configured 
 The template file **crontab_example** provided has the following content :
 
 ```
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/clientdata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
-#* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh endpoint 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/metricsdbdata_every_minute.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
-30 11 * * * /opt/cloudant-performancecollector/perfagent_cronscript/volumedata_every_day.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/clientdata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
+#* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh endpoint 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/metricsdbdata_every_minute.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
+30 11 * * * /opt/cloudant-performancecollector/perfagent_cronscript/volumedata_every_day.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
 
 ```
 The lines can be copied to root's crontab, and the following adjustments made :
 
 * change `ldap.bkp.ibm.com` to the postgres hostname you have set up in the installation process
-* change `cl11c74lb1.ibm.com` to the hostname of the loadbalancer that the script is running on.   
+* change all the final `cloudant` to the password of your cloudant account on postgres. `cloudant` is the default value.
+* change `cl11c74lb1.ibm.com` to the hostname of the loadbalancer that the script is running on.  
 -- You need to set this up on each loadbalancer.   
 -- It ensures that either load balancer can load data into postgres for the same minute during a switchover
 * change `30 11` to the time of day you want volumedata collected
+
 
 ##	Cron Operation Summary  
 
