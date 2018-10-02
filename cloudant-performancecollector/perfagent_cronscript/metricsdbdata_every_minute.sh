@@ -21,11 +21,11 @@ eval $hostbldpsqlfile
 sed -i 's/copy/\\copy/' $smooshpsqlfile
 sed -i 's/copy/\\copy/' $ioqpsqlfile
 sed -i 's/copy/\\copy/' $hostpsqlfile
-PGPASSWORD=cloudant
+PGPASSWORD=$5
 export PGPASSWORD
 
-/usr/bin/psql -U cloudant -d postgres -h $1 -f $smooshpsqlfile 
-/usr/bin/psql -U cloudant -d postgres -h $1 -f $ioqpsqlfile 
-/usr/bin/psql -U cloudant -d postgres -h $1 -f $hostpsqlfile 
+psql -U cloudant -d postgres -h $1 -f $smooshpsqlfile 
+psql -U cloudant -d postgres -h $1 -f $ioqpsqlfile 
+psql -U cloudant -d postgres -h $1 -f $hostpsqlfile 
 rm -f $smooshpsqlfile $ioqpsqlfile $hostpsqlfile
 rm -f $smooshstatsfile $ioqstatsfile $hoststatsfile
