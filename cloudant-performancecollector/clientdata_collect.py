@@ -95,15 +95,29 @@ def process_client_dbstatline(thisline,fromtime,totime,thislist,granularity,excl
     verb='unknown'
     endpoint='unknown'
     clientip='unknown'
+    params='-'
+    selector='-'
+    body='-'
     params=None
-    thislineparts = thisline.split()
-    i = 0
-    basefound = False
-    while i < len(thislineparts) and not basefound:
-     if thislineparts[i] == 'HTTP/1.1"':
+    thislineparts = []
+    http = False
+    if 'HTTP/1' in thisline:
+     http = True
+     thislineparts = thisline.split()
+     i = 0
+     basefound = False
+     while i < len(thislineparts) and not basefound:
+      if 'HTTP/1' in thislineparts[i]:
        basefound = True
-     i=i+1
-    lineparts = thislineparts[:i]
+      else:
+       i=i+1
+     lineparts = thislineparts[:(i+1)]
+     if 'HTTP/1' in thislineparts[len(thislineparts)-1]:
+       selector = '-'
+     else:
+       selector = thislineparts[len(thislineparts)-1]
+    else:
+     lineparts = thisline.split()
     if len(lineparts) > 6 and 'haproxy' in thisline:
      try:
         linetime = datetime.datetime.strptime(lineparts[linetime_index][linetime_start:linetime_end],linetime_format).strftime('%Y%m%d%H%M')
@@ -131,48 +145,43 @@ def process_client_dbstatline(thisline,fromtime,totime,thislist,granularity,excl
         status = int(lineparts[status_index])
         size = int(lineparts[size_index])
         restcall = []
-        if len(lineparts) == base_index:
-         restcall = lineparts[base_index-1]
-        elif len(lineparts) == base_index+2:
-         verb = lineparts[base_index-1][1:]
-         restcall = lineparts[base_index].split('?')
-        elif len(lineparts) == base_index+3:
-         verb = lineparts[base_index][1:]
-         restcall = lineparts[base_index+1].split('?')
-        elif len(lineparts) == base_index+4:
-         verb = lineparts[base_index+1][1:]
-         restcall = lineparts[base_index+2].split('?')
+        base_offset = len(lineparts) - base_index
+        if not http:
+         verb = lineparts[len(lineparts)-2][1:]
+         restcall = lineparts[len(lineparts)-1].split('?')
+        else:
+         verb = lineparts[base_index+base_offset-3][1:]
+         restcall = lineparts[base_index+base_offset-2].split('?')
         url = restcall[0].split('/')
         if len(restcall) > 1:
          params = restcall[1]
-        if len(url) == 2: # database level call
-         if url[1].startswith('dashboard.'):
-          database = 'dashboard-client'
-         else:
-          database = url[1]
-         endpoint = 'none'
-        elif len(url) == 3: 
-         if url[1].startswith('dashboard.'):
-          database = 'dashboard-client'
-         else:
-          database = url[1]
-         if len(url[2]) == 0: 
-          endpoint = 'none'
-         elif url[2].startswith('_'):
-          endpoint = url[2]
-         else:
-          endpoint = 'document-level' 
-        elif len(url) > 3:
-         if url[1].startswith('dashboard.'):
-          database = 'dashboard-client'
-         else:
-          database = url[1]
-         if url[2].startswith('_design') and len(url)>4:
-          endpoint = url[2]+url[4]
-         elif url[2].startswith('_'):
-          endpoint = url[2]
-         else:
-          endpoint = 'document-level' 
+        if len(url) > 1 and len(url[1])==0:
+          database = 'haproxytest' 
+        if len(url) > 1 and len(url[1])>0:
+          database = str(url[1])
+        if len(url) == 2 and database == '_session' and verb == 'GET':
+          endpoint = 'logon'
+        if len(url) == 2 and database == '_session' and verb == 'POST':
+          endpoint = 'logon'
+        if len(url) == 2 and database == '_session' and verb == 'DELETE':
+          endpoint = 'logoff'
+        if len(url) == 2 and database != '_session':
+          endpoint = 'dbinfo'
+        if len(url) > 2:
+          es = str(url[2]);
+          for i in range(3,len(url)):
+           es = es + '/' + str(url[i])
+          endpoint = es
+        if len(url) == 3 and not str(url[2]).startswith('_'):
+          endpoint = 'singledocument'
+        if len(url) == 4 and str(url[2]).startswith('_local'):
+          endpoint = 'replicationdocument'
+        if database == 'metrics_app' and 'statistics' in endpoint:
+          endpoint = 'metricsdashboard'
+        if '"<BADREQ>"' in thisline:
+          database = 'BADREQUEST'
+          verb = 'BADREQUEST'
+          endpoint = 'BADREQUEST'
         if (int(linetime) >= int(fromtime)) and (int(linetime) < int(totime)):
           if not exclude_entry(database,verb,endpoint,exclusions) and not exclude_client(clientip,exclusions):
             thislist.append([clusterurl,loghost,clientip,linetime,markertime,markertime_epoch,verb,tq,tr,tt,ttr,status,size,endpoint])

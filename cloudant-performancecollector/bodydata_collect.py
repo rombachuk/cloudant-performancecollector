@@ -100,18 +100,18 @@ def process_body_dbstatline(thisline,fromtime,totime,thislist,granularity,exclus
     body='-'
     thislineparts = []
     http = False
-    if 'HTTP/1.1"' in thisline:
+    if 'HTTP/1' in thisline:
      http = True
      thislineparts = thisline.split()
      i = 0
      basefound = False
      while i < len(thislineparts) and not basefound:
-      if 'HTTP/1.1"' in thislineparts[i]:
+      if 'HTTP/1' in thislineparts[i]:
        basefound = True
       else:
        i=i+1
      lineparts = thislineparts[:(i+1)]
-     if 'HTTP/1.1"' in thislineparts[len(thislineparts)-1]:
+     if 'HTTP/1' in thislineparts[len(thislineparts)-1]:
        selector = '-'
      else:
        selector = thislineparts[len(thislineparts)-1]
@@ -167,13 +167,17 @@ def process_body_dbstatline(thisline,fromtime,totime,thislist,granularity,exclus
           for i in range(3,len(url)):
            es = es + '/' + str(url[i])
           endpoint = es
-        if verb == "GET" and len(url) == 3 and not str(url[2]).startswith('_'):
+        if len(url) == 3 and not str(url[2]).startswith('_'):
           endpoint = 'singledocument'
-        if verb == "PUT" and len(url) == 3 and not str(url[2]).startswith('_'):
-          endpoint = 'singledocument'
-        if verb == "POST" and len(url) == 3 and not str(url[2]).startswith('_'):
-          endpoint = 'singledocument'
-        elif verb == "POST" and "queries" in selector and '"include_docs":true' in selector and "startkey" in selector :
+        elif len(url) == 4 and str(url[2]).startswith('_local'):
+          endpoint = 'replicationdocument'
+        elif database == 'metrics_app' and 'statistics' in endpoint:
+          endpoint = 'metricsdashboard'
+        elif '"<BADREQ>"' in thisline:
+          database = 'BADREQUEST'
+          verb = 'BADREQUEST'
+          endpoint = 'BADREQUEST'
+        if verb == "POST" and "queries" in selector and '"include_docs":true' in selector and "startkey" in selector :
           body = "startkey_includetrue"
         elif verb == "POST" and "queries" in selector and '"include_docs":false' in selector and "startkey" in selector :
           body = "startkey_includefalse"
