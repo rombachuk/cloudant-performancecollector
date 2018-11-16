@@ -169,7 +169,13 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
           endpoint = 'logon'
         if len(url) == 2 and database == '_session' and verb == 'DELETE':
           endpoint = 'logoff'
-        if len(url) == 2 and database != '_session':
+        if len(url) == 2 and database != '_session' and verb == 'PUT' and '_id' not in selector:
+          endpoint = 'dbcreate'
+        if len(url) == 2 and database != '_session' and verb == 'POST' and '_id' in selector:
+          endpoint = 'singledocument'
+        if len(url) == 2 and database != '_session' and verb == 'DELETE' and '_id' not in selector:
+          endpoint = 'dbdelete'
+        if len(url) == 2 and database != '_session' and verb == 'GET':
           endpoint = 'dbinfo'
         if len(url) > 2:
           es = str(url[2]);
