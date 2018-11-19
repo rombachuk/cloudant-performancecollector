@@ -30,7 +30,7 @@ fi
 bldpsqlfile=`echo "echo copy "$1"_stats \(index,"$scopecols",mtime,mtime_epoch,tqmin,tqavg,tqmax,tqcount,tqsum,trmin,travg,trmax,trcount,trsum,ttmin,ttavg,ttmax,ttcount,ttsum,ttrmin,ttravg,ttrmax,ttrcount,ttrsum,szmin,szavg,szmax,szcount,szsum,st2count,st3count,st4count,st5count,stfailpct\) from \'"$statsfile"\' delimiter \',\' csv header > "$psqlfile`
 eval $bldpsqlfile
 sed -i 's/copy/\\copy/' $psqlfile
-PGPASSWORD=$5
+PGPASSWORD=$7
 export PGPASSWORD
 psql -U cloudant -d postgres -h $4 -f $psqlfile 
 rm -f $psqlfile $logfile  $statsfile $eventsfile 
