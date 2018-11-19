@@ -15,7 +15,7 @@ viewbldpsqlfile=`echo "echo copy view_stats \(index,cluster,database,viewdoc,vie
 eval $viewbldpsqlfile
 sed -i 's/copy/\\copy/' $dbpsqlfile
 sed -i 's/copy/\\copy/' $viewpsqlfile
-PGPASSWORD=$7
+PGPASSWORD=$3
 export PGPASSWORD
 psql -U cloudant -d postgres -h $1 -f $dbpsqlfile 
 psql -U cloudant -d postgres -h $1 -f $viewpsqlfile 
