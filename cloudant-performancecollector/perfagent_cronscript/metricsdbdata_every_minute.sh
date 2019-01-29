@@ -1,7 +1,8 @@
 #!/bin/bash
 # set -x
 now=`date +%s`
-/usr/bin/python /opt/cloudant-performancecollector/metricsdb_collect.py -x $2
+conninfo=`echo "/opt/cloudant-performancecollector/perfagent_connection.info"`
+/usr/bin/python /opt/cloudant-performancecollector/metricsdb_collect.py -x $conninfo
 sleep 5
 smooshfindfile="find /opt/cloudant-performancecollector/perfagent_results -name smooshcompactionstats* | tail -n 1"
 smooshstatsfile=`eval $smooshfindfile`
@@ -21,11 +22,14 @@ eval $hostbldpsqlfile
 sed -i 's/copy/\\copy/' $smooshpsqlfile
 sed -i 's/copy/\\copy/' $ioqpsqlfile
 sed -i 's/copy/\\copy/' $hostpsqlfile
-PGPASSWORD=$3
+pghost=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 1`
+pgdb=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 2`
+pguser=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 1`
+PGPASSWORD=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 2`
 export PGPASSWORD
 
-psql -U cloudant -d postgres -h $1 -f $smooshpsqlfile 
-psql -U cloudant -d postgres -h $1 -f $ioqpsqlfile 
-psql -U cloudant -d postgres -h $1 -f $hostpsqlfile 
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $smooshpsqlfile 
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $ioqpsqlfile 
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $hostpsqlfile 
 rm -f $smooshpsqlfile $ioqpsqlfile $hostpsqlfile
 rm -f $smooshstatsfile $ioqstatsfile $hoststatsfile

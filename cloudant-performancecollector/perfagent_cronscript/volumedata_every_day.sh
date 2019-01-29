@@ -1,7 +1,8 @@
 #!/bin/bash
 # set -x
 now=`date +%s`
-/usr/bin/python /opt/cloudant-performancecollector/volume_collect.py -x $2
+conninfo=`echo "/opt/cloudant-performancecollector/perfagent_connection.info"`
+/usr/bin/python /opt/cloudant-performancecollector/volume_collect.py -x $conninfo
 sleep 5
 dbfindfile="find /opt/cloudant-performancecollector/perfagent_results -name dbvolumestats* | tail -n 1"
 dbstatsfile=`eval $dbfindfile`
@@ -15,9 +16,12 @@ viewbldpsqlfile=`echo "echo copy view_stats \(index,cluster,database,viewdoc,vie
 eval $viewbldpsqlfile
 sed -i 's/copy/\\copy/' $dbpsqlfile
 sed -i 's/copy/\\copy/' $viewpsqlfile
-PGPASSWORD=$3
+pghost=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 1`
+pgdb=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 2`
+pguser=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 1`
+PGPASSWORD=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 2`
 export PGPASSWORD
-psql -U cloudant -d postgres -h $1 -f $dbpsqlfile 
-psql -U cloudant -d postgres -h $1 -f $viewpsqlfile 
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $dbpsqlfile 
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $viewpsqlfile 
 rm -f $dbpsqlfile $viewpsqlfile 
 rm -f $viewstatsfile $dbstatsfile 

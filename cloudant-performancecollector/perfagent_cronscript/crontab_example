@@ -1,6 +1,5 @@
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/clientdata_every_minute.sh verb 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
-#* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh endpoint 2 1 ldap.bkp.ibm.com cl11c74lb1.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
-* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/metricsdbdata_every_minute.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
-30 11 * * * /opt/cloudant-performancecollector/perfagent_cronscript/volumedata_every_day.sh ldap.bkp.ibm.com /opt/cloudant-performancecollector/perfagent_connection.info cloudant > /dev/null 2>&1
-
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh verb 2 1 primary.ibm.com > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/clientdata_every_minute.sh verb 2 1 primary.ibm.com > /dev/null 2>&1
+#* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/proxydata_every_minute.sh endpoint 2 1 primary.ibm.com > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/perfagent_cronscript/metricsdbdata_every_minute.sh > /dev/null 2>&1
+30 11 * * * /opt/cloudant-performancecollector/perfagent_cronscript/volumedata_every_day.sh > /dev/null 2>&1

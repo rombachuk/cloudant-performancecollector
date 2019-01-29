@@ -7,7 +7,10 @@ psqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"body$2"
 bldpsqlfile=`echo "echo copy body_endpoint_stats_s \(index,cluster,loghost,client,database,verb,endpoint,body,mtime,mtime_epoch,tqmin,tqavg,tqmax,tqcount,tqsum,trmin,travg,trmax,trcount,trsum,ttmin,ttavg,ttmax,ttcount,ttsum,ttrmin,ttravg,ttrmax,ttrcount,ttrsum,szmin,szavg,szmax,szcount,szsum,st2count,st3count,st4count,st5count,stfailpct\) from \'"$statsfile"\' delimiter \',\' csv header > "$psqlfile`
 eval $bldpsqlfile
 sed -i 's/copy/\\copy/' $psqlfile
-PGPASSWORD=cloudant
+pghost=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 1`
+pgdb=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 2`
+pguser=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 1`
+PGPASSWORD=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_credentials.info | cut -d ":" -f 2`
 export PGPASSWORD
-/usr/bin/psql -U cloudant -d postgres -h $3 -f $psqlfile
+/usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $psqlfile
 rm -f $psqlfile $statsfile $eventsfile
