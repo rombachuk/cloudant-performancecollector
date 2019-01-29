@@ -324,7 +324,10 @@ Once the software is newly deployed, then the `root` user cron must be configure
 * metricsdbdata\_every\_minute entry is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 * volumedata\_every\_day is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 
-The file `perfagent_results/crontab.example` provides a template. The crontab scripts above now require setup of postgres configuration using the following files : `postgres_pg_db.info,postgres_pg_credentials.info`
+The file `perfagent_results/crontab.example` provides a template and with this release, should work without modification, since parameters are now better structured. Remember to only enable metrics and volumedb on ONE load balancer. Comment out or delete the lines one of the lbs.
+
+
+The crontab scripts above now require setup of postgres configuration using the following files : `postgres_pg_db.info,postgres_pg_credentials.info`
 
 Consult the Configuration document for this tool to set the parameters to those appropriate for your cluster.
 

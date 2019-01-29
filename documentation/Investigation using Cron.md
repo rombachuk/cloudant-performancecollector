@@ -51,14 +51,13 @@ It can be invoked at minute granularity using the minute_onetime script. See the
 
 ```
  /opt/cloudant-performancecollector/perfagent_cronscript/bodydata_minute_onetime.sh  
-  201901291134 201901291139 primary.ibm.com /var/log/haproxy.log
+  201901291134 201901291139 /var/log/haproxy.log
 ```
 
 In the example above, detailed body stats per minute are gathered for   
 
 * starttime `2019-01-29 11:34`
 * endtime `2019-01-29 11:39`
-* haproxy-hosttag   `primary.ibm.com`
 * logfile scanned in `/var/log/haproxy.log`
 
 The table `body_endpoint_stats` should be loaded from each per-minute run.
@@ -74,14 +73,13 @@ It can be invoked at second granularity using the minute_onetime script. See the
 
 ```
  /opt/cloudant-performancecollector/perfagent_cronscript/bodydata_second_onetime.sh  
-  201901291134 201901291135 primary.ibm.com /var/log/haproxy.log
+  201901291134 201901291135  /var/log/haproxy.log
 ```
 
 In the example above, detailed body stats per second are gathered for   
 
 * starttime `2019-01-29 11:34`
 * endtime `2019-01-29 11:35`
-* haproxy-hosttag   `primary.ibm.com`
 * logfile scanned in `/var/log/haproxy.log`
 
 The table `body_endpoint_stats_s` should be loaded from each per-minute run.
