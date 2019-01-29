@@ -31,6 +31,68 @@ The table `endpoint_stats` should be loaded from each per-minute run.
 
 Disable once investigationa are complete.
 
+## Body Level Investigations
+
+This enables collection of proxy-sourced data for every database-endpoint-body combination occurring on the cluster. Body content must be enabled in the haproxy to make use of this option. Consult the author for assistance with this.
+
+This can be very useful in tracking :
+
+* very detailed query analysis 
+ 
+This will likely lead to many times the row count per minute, or per second, so should be limited to short time periods.
+
+You should run the following schema script to set up tables. Volumes can be high so be careful to clean these tables up after a run :-
+
+`bodydata_postgres.sql`
+
+###Per Minute Granularity
+
+It can be invoked at minute granularity using the minute_onetime script. See the following example :
+
+```
+ /opt/cloudant-performancecollector/perfagent_cronscript/bodydata_minute_onetime.sh  
+  201901291134 201901291139 primary.ibm.com /var/log/haproxy.log
+```
+
+In the example above, detailed body stats per minute are gathered for   
+
+* starttime `2019-01-29 11:34`
+* endtime `2019-01-29 11:39`
+* haproxy-hosttag   `primary.ibm.com`
+* logfile scanned in `/var/log/haproxy.log`
+
+The table `body_endpoint_stats` should be loaded from each per-minute run.
+postgres and cluster credentials are set up in the same way as the cronjobs.
+
+This script is a feeder to the Traffic Detail performance dashboards.
+
+Disable once investigations are complete.
+
+###Per Second Granularity
+
+It can be invoked at second granularity using the minute_onetime script. See the following example :
+
+```
+ /opt/cloudant-performancecollector/perfagent_cronscript/bodydata_second_onetime.sh  
+  201901291134 201901291135 primary.ibm.com /var/log/haproxy.log
+```
+
+In the example above, detailed body stats per second are gathered for   
+
+* starttime `2019-01-29 11:34`
+* endtime `2019-01-29 11:35`
+* haproxy-hosttag   `primary.ibm.com`
+* logfile scanned in `/var/log/haproxy.log`
+
+The table `body_endpoint_stats_s` should be loaded from each per-minute run.
+postgres and cluster credentials are set up in the same way as the cronjobs. 
+Keep the time range short.
+
+This script is a feeder to the Traffic Detail performance dashboards.
+
+Disable once investigations are complete.
+
+
 ## Per-hour or Per-minute Volume Data Investigations
 
 This allows compaction issues and fast growing databases to be tracked at finer time granularity than once a day.

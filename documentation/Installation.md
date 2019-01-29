@@ -221,6 +221,7 @@ Several steps are needed :
   
 * configure haproxy token setup in `cloudant-performancecollector/perfagent_collect.conf`
 * configure cluster access for metricsdb based stats in `cloudant-performancecollector/perfagent_connection.info`
+* * configure postgres host:db in `cloudant-performancecollector/perfagent_pg_db.info` and user:password info  in `cloudant-performancecollector/perfagent_pg_credentiials.info`
 * configure exclusions for data collection (proxydata and clientdata)
 * configure exclusions and thresholds for event-detection (proxydata only)
 * run the deploy/clean_install.sh script
@@ -246,6 +247,30 @@ admincredentials    bWlk********3MHJk
 ```   
 * The clusterurl should be the vip of the cloudant local cluster.
 * The admin credentials shoud be a base64encoding of the string `user:password` where the user is a cluster admin user.  
+
+#### Configuration (perfagent\_pg_db.info)
+Set up the hostname:db string for use by the postgres loading scripts.
+The expected format is postgreshost:db . The :  is important
+
+```
+ldap.bkp.ibm.com:postgres    
+```   
+* The postgres host would be `ldap.bkp.ibm.com`.
+* The postgres database would be `postgres` (postgres is the default).  
+
+
+#### Configuration (perfagent\_pg_credentials.info)
+Set up the pguser:pgpassword as a base64 string for use by the postgres loading scripts. You can do this from the shell using 
+
+```
+$ echo cloudant:passw0rd | base64 > perfagent_pg_credentials.info    
+```   
+* The postgres user would be `cloudant`.
+* The postgres password would be `passw0rd` 
+* In the above example you would see the following contents in the file. 
+
+`Y2xvdWRhbnQ6cGFzc3cwcmQK`
+
 
 #### Configuration of proxy Data Exclusions (perfagent\_stats\_exclusions.info)
 
@@ -299,7 +324,9 @@ Once the software is newly deployed, then the `root` user cron must be configure
 * metricsdbdata\_every\_minute entry is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 * volumedata\_every\_day is enabled on just one load-balancer _(using the vip cluster address means it works even when it is not the primary)_
 
-The file `perfagent_results/crontab.example` provides a template. Consult the Configuration document for this tool to set the parameters to those appropriate for your cluster.
+The file `perfagent_results/crontab.example` provides a template. The crontab scripts above now require setup of postgres configuration using the following files : `postgres_pg_db.info,postgres_pg_credentials.info`
+
+Consult the Configuration document for this tool to set the parameters to those appropriate for your cluster.
 
 
 ### Patch Install
@@ -316,6 +343,7 @@ Go to `deploy` directory, and run `./patch_install.sh`
 This script will :  
   
 * update the *.py files in `/opt/cloudant-performancecollector`
+* update the *.sh files in `/opt/cloudant-performancecollector/perfagent_cronscript`
 * backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the patched installation
 * create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation

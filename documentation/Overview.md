@@ -1,7 +1,7 @@
 
 # Introduction
 ## Release Information
-This document version is aligned with Release 27
+This document version is aligned with Release 28
 ## Document Purpose
 The purpose of this document is to provide a user guide for the cloudant-performancecollector tool, delivered by IBM Services. 
 The tool is provided on an opensource basis, and customers are free to enhance or modify the tool in any way. Such changes may of course modify the features, options, and descriptions provided in this document.
@@ -77,6 +77,7 @@ This feature allows more detailed/granular metrics to be collected for short per
 This can mean :
 
 * increasing the resource levels of metrics from per-database to per-database-endpoint (proxydata or clientdata)
+* investigating using bodylevel onetime scripts (bodydata) and Traffic Detail dashboards
 * increasing the collection rate from per-day to per-hour or per-minute (volumedata)
 
 Dashboards are available to support these types of investigation.
