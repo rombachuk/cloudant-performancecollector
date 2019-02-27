@@ -116,8 +116,8 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
        verb = lineparts[verbindex][1:]
       else:
        verbindex=verbindex+1
-     if len(lineparts) == verbindex+4:
-       selector = lineparts[verbindex+3]
+     if len(lineparts) >= verbindex+4:
+       selector = str(lineparts[verbindex+3:]) 
        restcall = lineparts[verbindex+1].split('?')
        url = restcall[0].split('/') 
      elif len(lineparts) == verbindex+3:
@@ -165,7 +165,9 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
           endpoint = 'logoff'
         if len(url) == 2 and database != '_session' and verb == 'PUT' and '_id' not in selector:
           endpoint = 'dbcreate'
-        if len(url) == 2 and database != '_session' and verb == 'POST' and '_id' in selector:
+        if len(url) == 2 and database != '_session' and verb == 'PUT' and '_id' in selector:
+          endpoint = 'singledocument'
+        if len(url) == 2 and database != '_session' and verb == 'POST':
           endpoint = 'singledocument'
         if len(url) == 2 and database != '_session' and verb == 'DELETE' and '_id' not in selector:
           endpoint = 'dbdelete'
