@@ -106,12 +106,12 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
     restcall = []
     url = []
     lineparts = []
-    if ('"GET' or '"PUT' or '"POST' or '"HEAD' or '"DELETE') in thisline:
+    if any (verbmatch in thisline for verbmatch in ['"GET','"PUT','"POST','"HEAD','"DELETE']):
      lineparts = thisline.split()
      verbindex = 0
      verbfound = False
      while verbindex < len(lineparts) and not verbfound:
-      if ('"GET' or '"PUT' or '"POST' or '"HEAD' or '"DELETE') in lineparts[verbindex]:
+      if any (verbmatch in lineparts[verbindex] for verbmatch in ['"GET','"PUT','"POST','"HEAD','"DELETE']):
        verbfound = True
        verb = lineparts[verbindex][1:]
       else:
