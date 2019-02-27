@@ -103,26 +103,29 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
     params='-'
     selector='-'
     body='-'
-    thislineparts = []
-    http = False
-    if 'HTTP/1' in thisline:
-     http = True
-     thislineparts = thisline.split()
-     i = 0
-     basefound = False
-     while i < len(thislineparts) and not basefound:
-      if 'HTTP/1' in thislineparts[i]:
-       basefound = True
-      else:
-       i=i+1
-     lineparts = thislineparts[:(i+1)]
-     if 'HTTP/1' in thislineparts[len(thislineparts)-1]:
-       selector = '-'
-     else:
-       selector = thislineparts[len(thislineparts)-1]
-    else: 
+    restcall = []
+    url = []
+    lineparts = []
+    if ('"GET' or '"PUT' or '"POST' or '"HEAD' or '"DELETE') in thisline:
      lineparts = thisline.split()
-    if len(lineparts) > 6 and 'haproxy' in thisline:
+     verbindex = 0
+     verbfound = False
+     while verbindex < len(lineparts) and not verbfound:
+      if ('"GET' or '"PUT' or '"POST' or '"HEAD' or '"DELETE') in lineparts[verbindex]:
+       verbfound = True
+       verb = lineparts[verbindex][1:]
+      else:
+       verbindex=verbindex+1
+     if len(lineparts) == verbindex+4:
+       selector = lineparts[verbindex+3]
+       restcall = lineparts[verbindex+1].split('?')
+       url = restcall[0].split('/') 
+     elif len(lineparts) == verbindex+3:
+       restcall = lineparts[verbindex+1].split('?')
+       url = restcall[0].split('/') 
+     elif len(lineparts) == verbindex+2:
+       restcall = lineparts[verbindex+1].split('?')
+       url = restcall[0].split('/') 
      try:
         linetime = datetime.datetime.strptime(lineparts[linetime_index][linetime_start:linetime_end],linetime_format).strftime('%Y%m%d%H%M')
         if linetime < fromtime or linetime >= totime:
@@ -152,15 +155,6 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
         ttr = int(tt) - int(tr)
         status = int(lineparts[status_index])
         size = int(lineparts[size_index])
-        restcall = []
-        base_offset = len(lineparts) - base_index
-        if not http:
-         verb = lineparts[len(lineparts)-2][1:]
-         restcall = lineparts[len(lineparts)-1].split('?')
-        else:
-         verb = lineparts[base_index+base_offset-3][1:]
-         restcall = lineparts[base_index+base_offset-2].split('?')
-        url = restcall[0].split('/')
         if len(restcall) > 1:
          params = restcall[1]
         if len(url) > 1:
