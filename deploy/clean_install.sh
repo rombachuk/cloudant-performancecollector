@@ -1,5 +1,5 @@
 #!/bin/bash
-now=`date +%Y%m%d%H%M`
+now=`date +%Y%m%d%H%M` 
 systemctl stop cpc_api_processor
 cp -r /opt/cloudant-performancecollector /opt/cloudant-performancecollector-bkp-$now
 mkdir /opt/cloudant-performancecollector-bkp-$now/init.d

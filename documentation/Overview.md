@@ -26,7 +26,7 @@ Each row collected is stamped with the cluster-id so data from several clusters 
 
 This feature provides statistics at a finer scope than available from the metrics dashboard which is limited to dbnode or whole-cluster. This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster. 
   
-Collection is supported for:  
+Collection is supported for :  
   
 * per-database metrics using haproxy log sources (proxydata collector)
 * per-client metrics using haproxy log sources (clientdata collector)
