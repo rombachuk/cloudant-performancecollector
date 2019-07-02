@@ -1,11 +1,11 @@
 #!/bin/bash
 # set -x
-stats=`echo "bodystats_body_by_minute_"$1"_to_"$2`
+stats=`echo "clientstats_"$1"_by_minute_"$2"_to_"$3`
 findfile="find /opt/cloudant-performancecollector/perfagent_results -name "$stats"* | tail -n 1"
 statsfile=`eval $findfile`
-psqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/"body$2"_body_"$frompretty"runner.sql"`
+psqlfile=`echo "/opt/cloudant-performancecollector/perfagent_cronscript/client_"$1"_"$2"runner.sql"`
 datacols=`head -1 $statsfile`
-bldpsqlfile=`echo "echo copy body_endpoint_stats \(index"$datacols"\) from \'"$statsfile"\' delimiter \',\' csv header > "$psqlfile`
+bldpsqlfile=`echo "echo copy "client_$1"_stats \(index"$datacols"\) from \'"$statsfile"\' delimiter \',\' csv header > "$psqlfile`
 eval $bldpsqlfile
 sed -i 's/copy/\\copy/' $psqlfile
 pghost=`cat /opt/cloudant-performancecollector/perfagent_pg_db.info | cut -d ":" -f 1`
@@ -15,4 +15,4 @@ PGPASSWORD=`base64 --decode /opt/cloudant-performancecollector/perfagent_pg_cred
 export PGPASSWORD
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $psqlfile
 rm -f $psqlfile 
-#rm -f $statsfile $eventsfile
+#rm $statsfile $eventsfile

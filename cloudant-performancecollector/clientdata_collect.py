@@ -43,9 +43,14 @@ def get_client_groupcriteria(granularity,scope):
 def generate_client_stats_output(op,granularity,scope,fromtime,totime,location,id,format):
     if os.path.exists(location):
       ofile = location + '/clientstats_' + scope + '_by_' + granularity + '_' + fromtime + '_to_' + totime + '_' + id + '.csv'
-      columns=['mtime','mtime_epoch','tqmin','tqavg','tqmax','tqcount','tqsum','trmin','travg','trmax','trcount','trsum',\
+      columns=['mtime','mtime_epoch','tqmin','tqavg','tqmax','tqcount','tqsum',\
+               'tcmin','tcavg','tcmax','tccount','tcsum',\
+               'trmin','travg','trmax','trcount','trsum',\
                'ttmin','ttavg','ttmax','ttcount','ttsum','ttrmin','ttravg','ttrmax','ttrcount','ttrsum',\
-               'szmin','szavg','szmax','szcount','szsum','st2count','st3count','st4count','st5count','stfailpct'] 
+               'szmin','szavg','szmax','szcount','szsum',\
+               'femin','feavg','femax','fecount','fesum',\
+               'bemin','beavg','bemax','becount','besum',\
+               'st2count','st3count','st4count','st5count','stfailpct']
       if scope == 'all':
        columns = ['cluster','loghost'] + columns
       elif scope == 'client':
