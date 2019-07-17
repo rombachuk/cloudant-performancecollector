@@ -3,6 +3,9 @@
 stats=`echo "stats_"$1"_by_minute_"$2"_to_"$3`
 findfile="find /opt/cloudant-performancecollector/results -name "$stats"* | tail -n 1"
 statsfile=`eval $findfile`
+events=`echo "events_"$1"_by_minute_"$2"_to_"$3`
+findfile="find /opt/cloudant-performancecollector/results -name "$events"* | tail -n 1"
+eventsfile=`eval $findfile`
 psqlfile=`echo "/opt/cloudant-performancecollector/tmp/"$1"_"$2"runner.sql"`
 datacols=`head -1 $statsfile`
 bldpsqlfile=`echo "echo copy "$1"_stats \(index"$datacols"\) from \'"$statsfile"\' delimiter \',\' csv header > "$psqlfile`
