@@ -47,7 +47,7 @@ def process_opts(params):
     valid_scope = False
     valid_granularity = False
     valid_timeboundary = False
-    defaults_file = "/opt/cloudant-specialapi/perfagent.conf"
+    defaults_file = "/opt/cloudant-specialapi/resources/collect/configuration/perfagent.conf"
     default_connectioninfo, default_certificate_verification,default_requests_ca_bundle,default_inputlogfile,default_thresholdsfile,\
     default_eventsexclusionsfile,default_statsexclusionsfile,default_scope,default_granularity,\
     default_performercount, default_resultslocation,default_outputformat = process_defaults_config(defaults_file)

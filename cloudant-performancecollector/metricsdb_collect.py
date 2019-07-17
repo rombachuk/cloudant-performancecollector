@@ -105,7 +105,7 @@ def execute_compactiondata_collect(sess,clusterurl,resultid,results_location):
   logging.warn('{Cloudant compaction agent collector} Error : '+str(e))
   return False
  
-defaults_file = "/opt/cloudant-performancecollector/perfagent.conf"
+defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
 logfilename = '/var/log/compactionagent.log'
 logging.basicConfig(filename = logfilename, level=logging.WARN,
                     format='%(asctime)s[%(funcName)-5s] (%(processName)-10s) %(message)s',

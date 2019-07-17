@@ -123,7 +123,7 @@ except:
     logging.warn("{cloudant client data collector} Unable to disable urllib3 warnings")
     pass
 
-defaults_file = "/opt/cloudant-performancecollector/perfagent.conf"
+defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
 logfilename = "/var/log/cloudant_clientdata_collector.log"
 
 logging.basicConfig(filename = logfilename, level=logging.WARN,
@@ -158,7 +158,7 @@ if __name__ == "__main__":
        opts.eventsexclusionsfile = default_eventsexclusionsfile
 
     if not opts.statsexclusionsfile:
-       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/clientdata_stats_exclusions.info'
+       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/resources/collect/configuration/clientdata_stats_exclusions.info'
 
     if not opts.scope:
        opts.scope = default_scope

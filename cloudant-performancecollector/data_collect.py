@@ -223,7 +223,7 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
 
 def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_url):
    linetime_format,linetime_index,linetime_start,linetime_end,\
-    timings_index,status_index,size_index,base_index,connections_index = process_collectconfig('/opt/cloudant-specialapi/perfagent_collect.conf')
+    timings_index,status_index,size_index,base_index,connections_index = process_collectconfig('/opt/cloudant-performancecollector/resources/collect/configuration/perfagent_collect.conf')
    linedbstatlist=[]
    if os.path.isfile(logfile):
      lf = None
