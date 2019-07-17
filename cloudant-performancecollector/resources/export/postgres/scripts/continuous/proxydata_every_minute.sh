@@ -10,4 +10,4 @@ logfile=`echo "/opt/cloudant-performancecollector/tmp/"proxy$HOSTNAME"_"$1"_"$fr
 tail -n 500000 /var/log/haproxy.log | grep $fromgrep | gzip > $logfile
 /opt/cloudant-performancecollector/resources/collect/scripts/proxydata_minute_collect.sh $1 $frompretty $topretty $logfile
 /opt/cloudant-performancecollector/resources/export/postgres/scripts/onetime/proxydata_minute_load.sh $1 $frompretty $topretty
-rm $logfile
+rm -f $logfile
