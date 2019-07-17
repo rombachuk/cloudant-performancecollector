@@ -9,4 +9,4 @@ fromgrep=`date -d @$fromepoch +%d/%b/%Y:%H:%M`
 logfile=`echo "/opt/cloudant-performancecollector/tmp/"proxy$HOSTNAME"_"$1"_"$frompretty"_haproxy.log"`
 tail -n 500000 /var/log/haproxy.log | grep $fromgrep > $logfile
 /opt/cloudant-performancecollector/resources/collect/scripts/proxydata_minute_collect.sh $1 $frompretty $topretty $logfile
-/opt/cloudant-performancecollector/resources/export/postgres/scripts/onetime/proxydata_minute_load.sh $1 $2 $3
+/opt/cloudant-performancecollector/resources/export/postgres/scripts/onetime/proxydata_minute_load.sh $1 $frompretty $topretty
