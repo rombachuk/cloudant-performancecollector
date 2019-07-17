@@ -1,12 +1,14 @@
 #!/bin/bash
-now=`date +%Y%m%d%H%M`
-systemctl stop cpc_api_processor
-cp -r /opt/cloudant-performancecollector /opt/cloudant-performancecollector-bkp-$now
-mkdir /opt/cloudant-performancecollector-bkp-$now/init.d
-cp /etc/init.d/cpc_api_processor /opt/cloudant-performancecollector-bkp-$now/init.d
-cp -r ../cloudant-performancecollector/*.py /opt/cloudant-performancecollector
-cp -r ../cloudant-performancecollector/perfagent_cronscript/*.sh /opt/cloudant-performancecollector/perfagent_cronscript
-cp -r ../cloudant-performancecollector/perfagent_cronscript/crontab_example /opt/cloudant-performancecollector/perfagent_cronscript
-cp /opt/cloudant-performancecollector/cpc_api_processor /etc/init.d
-systemctl enable cpc_api_processor
-systemctl start cpc_api_processor
+now=`date +%Y%m%d%H%M` 
+systemctl stop cbcon
+cp -r /opt/cloudant-businesscontinuity /opt/cloudant-businesscontinuity-bkp-$now
+mkdir /opt/cloudant-businesscontinuity-bkp-$now/init.d
+cp /etc/init.d/cbcon /opt/cloudant-businesscontinuity-bkp-$now/init.d
+rm -f /etc/init.d/cbcon
+rm -rf /opt/cloudant-businesscontinuity/*.pyc
+cp -r ../cloudant-businesscontinuity/*.py /opt/cloudant-businesscontinuity/
+cp /opt/cloudant-businesscontinuity/cbcon /etc/init.d
+systemctl enable cbcon
+systemctl start cbcon
+
+echo 'completed'
