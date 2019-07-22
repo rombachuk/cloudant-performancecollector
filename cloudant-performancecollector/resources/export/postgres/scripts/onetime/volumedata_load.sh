@@ -21,4 +21,4 @@ export PGPASSWORD
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $dbpsqlfile 
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $viewpsqlfile 
 rm -f $dbpsqlfile $viewpsqlfile 
-rm -f $viewstatsfile $dbstatsfile 
+#rm -f $viewstatsfile $dbstatsfile 

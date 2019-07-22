@@ -15,4 +15,4 @@ PGPASSWORD=`base64 --decode /opt/cloudant-performancecollector/resources/export/
 export PGPASSWORD
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $psqlfile
 rm -f $psqlfile 
-rm -f $statsfile $eventsfile
+

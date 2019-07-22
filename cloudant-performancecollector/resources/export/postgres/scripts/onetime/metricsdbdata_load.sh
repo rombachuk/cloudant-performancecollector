@@ -29,4 +29,4 @@ export PGPASSWORD
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $ioqpsqlfile 
 /usr/bin/psql -U $pguser -d $pgdb -h $pghost -f $hostpsqlfile 
 rm -f $smooshpsqlfile $ioqpsqlfile $hostpsqlfile
-rm -f $smooshstatsfile $ioqstatsfile $hoststatsfile
+#rm -f $smooshstatsfile $ioqstatsfile $hoststatsfile

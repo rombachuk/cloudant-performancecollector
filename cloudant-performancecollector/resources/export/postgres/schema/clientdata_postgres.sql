@@ -38,5 +38,3 @@ create index client_endpoint_stats_idx4 on client_endpoint_stats (client);
 create index client_endpoint_stats_idx5 on client_endpoint_stats (mtime_epoch);
 create index client_endpoint_stats_idx6 on client_endpoint_stats (cluster);
 create index client_endpoint_stats_idx7 on client_endpoint_stats (endpoint);
-
-

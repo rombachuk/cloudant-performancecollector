@@ -104,8 +104,8 @@ def execute_client_collect(scope,s_url,s_credentials,s_username,s_password,p_url
        if numstats == 0:
          result = { "statsfile" : "", "eventsfile" : "" }
        else: 
-         result = { "statsfile" : str(resultslocation)+ '/stats_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv', 
-       "eventsfile" : str(resultslocation)+ '/events_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv' }
+         result = { "statsfile" : str(resultslocation)+ '/clientstats_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv', 
+       "eventsfile" : str(resultslocation)+ '/clientevents_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv' }
       logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] End")
       return result 
    except Exception as e:
