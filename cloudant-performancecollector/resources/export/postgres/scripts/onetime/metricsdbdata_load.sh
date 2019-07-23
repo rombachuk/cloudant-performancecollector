@@ -1,20 +1,23 @@
 #!/bin/bash
 # set -x
 now=`date +%s`
-smooshfindfile="find /opt/cloudant-performancecollector/results -name smooshcompactionstats* | tail -n 1"
+smooshfindfile="find /opt/cloudant-performancecollector/results -name smooshstats_$1* | tail -n 1"
 smooshstatsfile=`eval $smooshfindfile`
-ioqfindfile="find /opt/cloudant-performancecollector/results -name ioqcompactionstats* | tail -n 1"
+ioqfindfile="find /opt/cloudant-performancecollector/results -name ioqtypestats_$1* | tail -n 1"
 ioqstatsfile=`eval $ioqfindfile`
-hostfindfile="find /opt/cloudant-performancecollector/results -name hostcompactionstats* | tail -n 1"
+hostfindfile="find /opt/cloudant-performancecollector/results -name hoststats_$1* | tail -n 1"
 hoststatsfile=`eval $hostfindfile`
 smooshpsqlfile=`echo "/opt/cloudant-performancecollector/tmp/"$now"smooshrunner.sql"`
 ioqpsqlfile=`echo "/opt/cloudant-performancecollector/tmp/"$now"ioqrunner.sql"`
 hostpsqlfile=`echo "/opt/cloudant-performancecollector/tmp/"$now"hostrunner.sql"`
-smooshbldpsqlfile=`echo "echo copy smoosh_stats \(index,cluster,host,channel,mtime,mtime_epoch,active,waiting,starting\) from \'"$smooshstatsfile"\' delimiter \',\' csv > "$smooshpsqlfile`
+smooshcols=`head -1 $smooshstatsfile`
+ioqcols=`head -1 $ioqstatsfile`
+hostcols=`head -1 $hoststatsfile`
+smooshbldpsqlfile=`echo "echo copy smoosh_stats \($smooshcols\) from \'"$smooshstatsfile"\' delimiter \',\' csv header > "$smooshpsqlfile`
 eval $smooshbldpsqlfile
-ioqbldpsqlfile=`echo "echo copy ioq_stats \(index,cluster,host,ioqtype,mtime,mtime_epoch,requests\) from \'"$ioqstatsfile"\' delimiter \',\' csv > "$ioqpsqlfile`
+ioqbldpsqlfile=`echo "echo copy ioq_stats \($ioqcols\) from \'"$ioqstatsfile"\' delimiter \',\' csv header > "$ioqpsqlfile`
 eval $ioqbldpsqlfile
-hostbldpsqlfile=`echo "echo copy host_stats \(index,cluster,host,mtime,mtime_epoch,doc_writes,doc_inserts,ioql_max,ioql_med,ioql_pctl_90,ioql_pctl_99,ioql_pctl_999\) from \'"$hoststatsfile"\' delimiter \',\' csv > "$hostpsqlfile`
+hostbldpsqlfile=`echo "echo copy host_stats \($hostcols\) from \'"$hoststatsfile"\' delimiter \',\' csv header> "$hostpsqlfile`
 eval $hostbldpsqlfile
 sed -i 's/copy/\\copy/' $smooshpsqlfile
 sed -i 's/copy/\\copy/' $ioqpsqlfile

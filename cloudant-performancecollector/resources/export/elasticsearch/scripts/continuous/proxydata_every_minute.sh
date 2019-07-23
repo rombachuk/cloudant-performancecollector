@@ -17,4 +17,4 @@ statsfile=`eval $findfile`
 events=`echo "events_"$1"_by_minute_"$frompretty"_to_"$topretty`
 findfile="find /opt/cloudant-performancecollector/results -name "$events"* | tail -n 1"
 eventsfile=`eval $findfile`
-rm -f $statsfile $eventsfile
+#rm -f $statsfile $eventsfile

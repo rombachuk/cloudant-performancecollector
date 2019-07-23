@@ -9,6 +9,13 @@ import time
 import requests
 from perfagent_menu import *
 
+def process_timeperiod(fromtime):
+    if fromtime is None:
+      ftime = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    else:
+      ftime = re.sub('[\/_\:-]','',fromtime)
+    return ftime
+
 def log_entry(location,filename,istring):
       if os.path.exists(location):
         lf = open(location+'/'+filename,'a')
@@ -16,17 +23,22 @@ def log_entry(location,filename,istring):
         lf.flush()
         lf.close()
 
-def execute_compactiondata_collect(sess,clusterurl,resultid,results_location):
+def execute_hostdata_collect(sess,clusterurl,fromtime,resultid,results_location):
  try:
-    now = datetime.datetime.now()
-    mtime = now.strftime("%Y%m%d%H%M")
+    mtime = fromtime
     mtime_epoch = int(time.mktime(time.strptime(mtime, "%Y%m%d%H%M")))
-    metricsdb_epoch = int(mtime_epoch - 59)
-    smooshfile = 'smooshcompactionstats_'+str(resultid)+'.csv'
-    ioqfile = 'ioqcompactionstats_'+str(resultid)+'.csv'
-    hostfile = 'hostcompactionstats_'+str(resultid)+'.csv'
+    start_epoch = int(mtime_epoch - 59)
+    smooshfile = 'smooshstats_'+str(fromtime)+'_'+str(resultid)+'.csv'
+    smooshcolumns = 'index,cluster,host,channel,mtime,mtime_epoch,active,waiting,starting'
+    log_entry(results_location,smooshfile,smooshcolumns)
+    ioqfile = 'ioqtypestats_'+str(fromtime)+'_'+str(resultid)+'.csv'
+    ioqcolumns = 'index,cluster,host,ioqtype,mtime,mtime_epoch,requests'
+    log_entry(results_location,ioqfile,ioqcolumns)
+    hostfile = 'hoststats_'+str(fromtime)+'_'+str(resultid)+'.csv'
+    hostcolumns = 'index,cluster,host,mtime,mtime_epoch,doc_writes,doc_inserts,ioql_max,ioql_med,ioql_pctl_90,ioql_pctl_99,ioql_pctl_999'
+    log_entry(results_location,hostfile,hostcolumns)
 
-    skey= str(metricsdb_epoch)+'000'
+    skey= str(start_epoch)+'000'
     ekey = str(mtime_epoch)+'000'
     smoosh_response = api_utils.get_with_retries(sess,clusterurl+'/metrics/_design/system_view/_view/system?startkey=["uptime",'+\
                         skey+']&endkey=["uptime",'+ekey+']&include_docs=true',2,None)
@@ -102,11 +114,11 @@ def execute_compactiondata_collect(sess,clusterurl,resultid,results_location):
       log_entry(results_location,hostfile,hoststring) 
     return True
  except Exception as e:
-  logging.warn('{Cloudant compaction agent collector} Error : '+str(e))
+  logging.warn('{Cloudant hostdata (from metricsdb) agent collector} Error : '+str(e))
   return False
  
 defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
-logfilename = '/var/log/compactionagent.log'
+logfilename = '/var/log/cloudant_hostdata_collector.log'
 logging.basicConfig(filename = logfilename, level=logging.WARN,
                     format='%(asctime)s[%(funcName)-5s] (%(processName)-10s) %(message)s',
                     )
@@ -117,7 +129,7 @@ except:
   try:
     requests.packages.urllib3.disable_warnings()
   except:
-    logging.warn("{Cloudant metricsdb performance worker} Unable to disable urllib3 warnings")
+    logging.warn("{Cloudant hostdata (from metricsdb) performance worker} Unable to disable urllib3 warnings")
     pass
 
 
@@ -151,24 +163,25 @@ if __name__ == '__main__':
 
     if s_url is None or s_credentials is None or s_username is None or s_password is None:
           print("perfagent: Cannot process connection info [" + str(opts.connectioninfo) + "]")
-          logging.warn("{Cloudant metricsdb performance worker} Cannot process connection info [" + str(opts.connectioninfo) + "]")
+          logging.warn("{Cloudant hostdata (from metricsdb) performance worker} Cannot process connection info [" + str(opts.connectioninfo) + "]")
           sys.exit(1)
     else:
-      logging.warn("{Cloudant metricsdb performance worker} Startup") 
+      logging.warn("{Cloudant hostdata (from metricsdb) performance worker} Startup") 
       sess,sresp,scookie = api_utils.create_cluster_session(s_url,s_username, s_password,p_url,opts.certverif)
       if sess == None:
-        logging.warn("Cloudant metricsdb performance worker} Cluster Access Error : Session Rejected")
+        logging.warn("Cloudant hostdata (from metricsdb) performance worker} Cluster Access Error : Session Rejected")
       elif sresp is None:
-        logging.warn("Cloudant metricsdb performance worker} Cluster Access Error : Session No response")
+        logging.warn("Cloudant hostdata (from metricsdb) performance worker} Cluster Access Error : Session No response")
       elif sresp.status_code > 250:
-        logging.warn("Cloudant metricsdb performance worker} Cluster Access Error : Session Error ["+str(sresp.status_code)+"]")
+        logging.warn("Cloudant hostdata (from metricsdb) performance worker} Cluster Access Error : Session Error ["+str(sresp.status_code)+"]")
       else:
+              opts.fromtime = process_timeperiod(opts.fromtime)
               resultid = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
-              response = execute_compactiondata_collect(sess,s_url,resultid,opts.resultslocation)
+              response = execute_hostdata_collect(sess,s_url,opts.fromtime,resultid,opts.resultslocation)
               if response: 
-                    logging.warn('{Cloudant metricsdb performance worker} Compaction Performance Agent Processing Completed Successfully for Entry ['+resultid+']') 
+                    logging.warn('{Cloudant hostdata (from metricsdb) performance worker} Processing Completed Successfully for Entry ['+resultid+']') 
               else:
-                logging.warn('{Cloudant metricsdb performance worker} Compaction Performance Agent Processing Failed for Entry ['+resultid+']') 
+                logging.warn('{Cloudant hostdata (from metricsdb) performance worker} Processing Failed for Entry ['+resultid+']') 
       api_utils.close_cluster_session(sess,s_url)
  except Exception as e:
-  logging.warn("cloudant metricsdb performance worker : Unexpected Shutdown : Reason ["+str(e)+"]")
+  logging.warn("cloudant hostdata (from metricsdb) performance worker : Unexpected Shutdown : Reason ["+str(e)+"]")

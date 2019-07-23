@@ -11,4 +11,4 @@ dbfindfile="find /opt/cloudant-performancecollector/results -name dbvolumestats*
 dbstatsfile=`eval $dbfindfile`
 viewfindfile="find /opt/cloudant-performancecollector/results -name viewvolumestats* | tail -n 1"
 viewstatsfile=`eval $viewfindfile`
-rm -f $viewstatsfile $dbstatsfile
+#rm -f $viewstatsfile $dbstatsfile
