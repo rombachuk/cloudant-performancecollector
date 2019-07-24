@@ -1,54 +1,94 @@
 
 # Introduction
 ## Release Information
-This document version is aligned with Release 28
+This document version is aligned with Release 30
 ## Document Purpose
-The purpose of this document is to provide a user guide for the cloudant-performancecollector tool, delivered by IBM Services. 
-The tool is provided on an opensource basis, and customers are free to enhance or modify the tool in any way. Such changes may of course modify the features, options, and descriptions provided in this document.
+The purpose of this document is to provide a user guide for the cloudant-performancecollector tool, delivered as an open source tool. 
+The tool is provided on an opensource basis, and users are free to enhance or modify the tool in any way. Such changes may of course modify the features, options, and descriptions provided in this document.
 
 ## Intended Audience 
-The intended audience for this document are IBM customers who are deploying Cloudant Local Edition Clusters, and wish to use the performancecollector features in the management of operations on their clusters.
-## Commercial Clarification 
- 
-This document does not amend in any way existing agreed terms and conditions of service, and readers are referred to IBM client representatives for any issues concerning terms and condition of service.
+The intended audience for this document are users who are deploying CouchDB clusters, and wish to use the performancecollector features in the management of operations on their clusters.
+
 ## Notices 
-INTERNATIONAL BUSINESS MACHINES CORPORATION PROVIDES THIS PUBLICATION "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Some jurisdictions do not allow disclaimer of express or implied warranties in certain transactions, therefore, this statement may not apply to you.
-This information could include technical inaccuracies or typographical errors. Changes are periodically made to the information herein; these changes will be incorporated in new editions of the publication. IBM may make improvements and/or changes in the product(s) and/or the program(s) described in this publication at any time without notice.
-Any references in this information to non-IBM websites are provided for convenience only and do not in any manner serve as an endorsement of those websites. The materials at those websites are not part of the materials for this IBM product and use of those websites is at your own risk.
-IBM may use or distribute any of the information you provide in any way it believes appropriate without incurring any obligation to you.
-IBM, the IBM logo, and ibm.com are trademarks or registered trademarks of International Business Machines Corp., registered in many jurisdictions worldwide. Other product and service names might be trademarks of IBM or other companies. A current list of IBM trademarks is available on the web at Copyright and trademark information  
+
 
 #	Features Summary
-##	Periodic Data Collection and Reporting 
-This feature allows data to be collected from sources on running clusters and displayed on dashboards with the grafana tool using postgres as a SQL data source. 
+##	Periodic Data Collection & Reporting  
+This feature allows data to be collected from sources on running clusters of :
 
-Each row collected is stamped with the cluster-id so data from several clusters can be captured to the same postgres data source.
+* CouchDB 2.+ with haproxy deployed as a load-balancer
+* Cloudant Local Edition 1.1 which includes CouchDB 2.0
 
-This feature provides statistics at a finer scope than available from the metrics dashboard which is limited to dbnode or whole-cluster. This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster. 
+and exported to :
+
+* postgres database
+* elasticsearch database
+
+Companion dashboards are available to visualise the data collected.
+
+###	Collection 
+
+Each row collected is stamped with the cluster-id so data from several clusters can be captured to the same  data source.
+
+This feature provides statistics at a finer scope than available from :
+
+* Cloudant Local 1.1 metrics dashboard which is limited to dbnode or whole-cluster
+* CouchDB futon dashboard
+
+This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster, or be distributed across several clusters. 
   
 Collection is supported for :  
   
-* per-database metrics using haproxy log sources (proxydata collector)
-* per-client metrics using haproxy log sources (clientdata collector)
-* per-host and per-type metrics using metricsdb database source (metricsdbdata collector)
+* per-database/verb/endpoint metrics using haproxy log sources (proxydata collector)
+* per-client/database/verb metrics using haproxy log sources (clientdata collector)
+* per-database/verb/endpoint/query-body metrics using haproxy log sources (bodydata collector)
+* per-client/database/verb metrics using haproxy log sources (clientdata collector)
+* per-host and per-type metrics using metricsdb database source available in Cloudant Local 1.1 (metricsdbdata collector)
 * per-database and per-view volume metrics using cluster dbs as data source (volume collector)
 
 Collection frequency is controlled by cron :  
   
 * haproxy,client and metricsdb sourced data are collected every minute.  
-* cluster volume metrics are collected every day
+* cluster volume metrics are best collected every day (or potentially per hour for lowcount clusters (100-200 dbs+views))
+* bodydata metrics are recommended for one-shot collection only, not continuous schemes, as they generate a large number of terms
+
+Aggregation processing is :
+
+* proxy,client and bodydata are pre-aggregated using python-pandas into min/max/avg/sum/count buckets
+* metricdbdata is collected from the Cloudant Local metricsdb which collects from CouchDB stats sources and pre-aggregated per minute
+* volumedata is collected from CouchDB db endpoints and is not aggregated
 
 Cluster-volume and proxydata collection are practical only when the number of databases is small - several thousand or less.
 
 Clientdata collection is practical only when the number of distinct clientip addresses calling the cluster is small.
 
-In deployments using _10k databases or more_, constant periodic collection of haproxy and cluster-volume data **_should be disabled_**. Enabling these periodic collections is too intensive on the cluster and postgres storage. 
+In deployments using _10k databases or more_, constant periodic collection of haproxy and cluster-volume data **_should be disabled_**. Enabling these periodic collections is too intensive on the cluster and database storage. 
 
 Other collection rates and granularity are possible, but recommended only for limited-period investigative activities. See the Investigation features of this document, and the Investigation documentation.
-## Problem Detection with Threshold Conditions
+
+### Export
+
+Export can be configured for one or more sources. The tool generates a common collection file and uses that to feed one or more export pipelines. This limits the collection cpu overhead. 
+
+Export can be executed on a one-time or a continuous basis (ie after every collect). Scripts are provided to support each mode of operation.
+
+Export is supported for:
+
+* postgres
+* elasticsearch
+
+### Reporting (Visualisation)
+
+The companion opensource deliverable 'Cloudant Performance Collector Dashboards' is provided to provide a default set of dashboards which work with the exported data. 
+
+Grafana dashboards are available for : postgres, elasticsearch
+Kibana dashboards are available for : elasticsearch
+
+
+## Problem Detection with Threshold Conditions (proxydata only)
 This feature allows problems to be detected by comparing the periodically-collected haproxy-sourced data against metric thresholds.   
   
-For each per-minute collection period, event files may be produced which itemise the item and threshold-breach. Event files can be parsed by a Event Consolidation system such as `IBM Netcool Operations Insight` and processed onto event dashboards and paging systems.
+For each per-minute collection period, event files may be produced which itemise the item and threshold-breach. Event files can be parsed by a Event Consolidation system  and processed onto event dashboards and paging systems.
 
 Clear condition event file lines are not produced, so the event system must detect when a threshold is no longer breached.
 
