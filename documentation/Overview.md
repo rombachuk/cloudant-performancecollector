@@ -124,7 +124,7 @@ Dashboards are available to support these types of investigation.
  
 The performancecollector supports a powerful set of options to process investigative collections of haproxy data at various resource levels (scope) and time-rollups (granularity).   
 
-The user can build shell scripts with these options and feed postgres and grafana. Custom schema creation and dashboard building may be required. 
+The user can build shell scripts with these options and feed their export-target. Custom schema/index/template creation and dashboard building may well be required. 
  
 
 Consult the **Investigation using Cron** documentation for further information.
