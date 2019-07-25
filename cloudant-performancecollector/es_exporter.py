@@ -9,6 +9,7 @@ import subprocess
 import requests
 from optparse import OptionParser
 from proxydata_esexport import execute_exportproxy
+from clientdata_esexport import execute_exportclient
 from hostdata_esexport import execute_exporthost
 from volumedata_esexport import execute_exportvolume
 
@@ -152,6 +153,13 @@ if __name__ == "__main__":
        if len(opts.fromtime) == 12:
         execute_exporthost(es_url,es_username,es_password,es_ssl,es_cert,\
                opts.fromtime,results_location)
+        valid_selection = True
+    
+    if opts.data == 'client' and valid_scope and valid_granularity: 
+       opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
+       if len(opts.fromtime) == 12 and len(opts.totime) == 12:
+        execute_exportclient(es_url,es_username,es_password,es_ssl,es_cert,\
+               opts.fromtime,opts.totime,opts.granularity,opts.scope,results_location)
         valid_selection = True
     
     if opts.data == 'proxy' and valid_scope and valid_granularity: 
