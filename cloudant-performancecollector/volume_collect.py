@@ -9,6 +9,14 @@ import time
 import requests
 from perfagent_menu import *
 
+def process_timeperiod(fromtime):
+    if fromtime is None:
+      ftime = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    else:
+      ftime = re.sub('[\/_\:-]','',fromtime)
+    return ftime
+
+
 def log_entry(location,filename,istring):
       if os.path.exists(location):
         lf = open(location+'/'+filename,'a')
@@ -16,14 +24,17 @@ def log_entry(location,filename,istring):
         lf.flush()
         lf.close()
 
-def execute_volumedata_collect(sess,clusterurl,resultid,results_location):
+def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_location):
  try:
-  now = datetime.datetime.now()
-  mtime = now.strftime("%Y%m%d%H%M")
+  mtime = fromtime 
   mtime_epoch = int(time.mktime(time.strptime(mtime, "%Y%m%d%H%M")))
-  metricsdb_epoch = int(mtime_epoch - 59)
-  dbfile = 'dbvolumestats_'+str(resultid)+'.csv'
-  viewfile = 'viewvolumestats_'+str(resultid)+'.csv'
+  start_epoch = int(mtime_epoch - 59)
+  dbfile = 'dbvolumestats_'+str(fromtime)+'_'+str(resultid)+'.csv'
+  dbcolumns = 'index,cluster,database,mtime,mtime_epoch,doc_count,del_doc_count,disk_size,data_size,shard_count'
+  log_entry(results_location,dbfile,dbcolumns)
+  viewfile = 'viewvolumestats_'+str(fromtime)+'_'+str(resultid)+'.csv'
+  viewcolumns = 'index,cluster,database,viewdoc,view,signature,mtime,mtime_epoch,disk_size,data_size,active_size,updates_pending_total,updates_pending_minimum,updates_pending_preferred,shard_count'
+  log_entry(results_location,viewfile,viewcolumns)
   alldbs_response = api_utils.get_with_retries(sess,clusterurl+'/_all_dbs',2,None)
   if alldbs_response is None:
     return None
@@ -75,7 +86,7 @@ def execute_volumedata_collect(sess,clusterurl,resultid,results_location):
   return False
  
 defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
-logfilename = '/var/log/volumeagent.log'
+logfilename = '/var/log/cloudant_volumedata_collector.log'
 logging.basicConfig(filename = logfilename, level=logging.WARN,
                     format='%(asctime)s[%(funcName)-5s] (%(processName)-10s) %(message)s',
                     )
@@ -132,12 +143,13 @@ if __name__ == '__main__':
       elif sresp.status_code > 250:
         logging.warn("Cloudant volume performancecollector worker} Cluster Access Error : Session Error ["+str(sresp.status_code)+"]")
       else:
+              opts.fromtime = process_timeperiod(opts.fromtime)
               resultid = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
-              response = execute_volumedata_collect(sess,s_url,resultid,opts.resultslocation)
+              response = execute_volumedata_collect(sess,s_url,opts.fromtime,resultid,opts.resultslocation)
               if response: 
-                    logging.warn('{Cloudant volume performancecollector worker} Compaction Performance Agent Processing Completed Successfully for Entry ['+resultid+']') 
+                    logging.warn('{Cloudant volume performancecollector worker} Volume Processing Completed Successfully for Entry ['+resultid+']') 
               else:
-                logging.warn('{Cloudant volume performancecollector worker} Compaction Performance Agent Processing Failed for Entry ['+resultid+']') 
+                logging.warn('{Cloudant volume performancecollector worker} Volume Data Collection Processing Failed for Entry ['+resultid+']') 
       api_utils.close_cluster_session(sess,s_url)
  except Exception as e:
   logging.warn("cloudant volume performancecollector worker : Unexpected Shutdown : Reason ["+str(e)+"]")

@@ -10,123 +10,70 @@ import re
 import os
 import json
 from es_utils import es_connect
+from es_utils import export_file_docs
 
 
-def find_line_indexes(scope):
-     if scope == "endpoint":
+def find_line_indexes(datatype):
+     if datatype == 'db':
+      idindex = 0
+      rindex = 1
+      tindex = 4
+      mindex = 5 
+     elif datatype == 'view':
       idindex = 0
       rindex = 1
       tindex = 7
-      tqindex = 8 
-      tcindex = 13
-      trindex = 18
-      ttindex = 23
-      ttrindex = 28
-      szindex = 33
-      feindex = 38
-      beindex = 43
-      stcountindex = 48
-     elif scope == "verb":
-      idindex = 0
-      rindex = 1
-      tindex = 6
-      tqindex = 7 
-      tcindex = 12
-      trindex = 17
-      ttindex = 22
-      ttrindex = 27
-      szindex = 32
-      feindex = 37
-      beindex = 42
-      stcountindex = 47
-     return idindex,rindex,tindex,tqindex,tcindex,trindex,ttindex,ttrindex,szindex,feindex,beindex,stcountindex
+      mindex = 8 
+     return idindex,rindex,tindex,mindex
 
-def get_line_docs(lineparts,scope):
+def get_line_docs(lineparts,datatype,index):
     try:
-     docs = {}
-     idindex,rindex,tindex,tqindex,tcindex,trindex,ttindex,ttrindex,szindex,feindex,beindex,stcountindex = find_line_indexes(scope)
-     docs['id'] = str(lineparts[tindex])+str(lineparts[idindex])
-     docs['tqdoc'] = {"metric": "tq", "cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-      "min":lineparts[tqindex],"avg":lineparts[tqindex+1],"max":lineparts[tqindex+2],"count":lineparts[tqindex+3],"sum":lineparts[tqindex+4]}
-     docs['tcdoc'] = {"metric": "tc","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[tcindex],"avg":lineparts[tcindex+1],"max":lineparts[tcindex+2],"count":lineparts[tcindex+3],"sum":lineparts[tcindex+4]}
-     docs['trdoc'] = {"metric": "tr","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[trindex],"avg":lineparts[trindex+1],"max":lineparts[trindex+2],"count":lineparts[trindex+3],"sum":lineparts[trindex+4]}
-     docs['ttdoc'] = {"metric": "tt","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[ttindex],"avg":lineparts[ttindex+1],"max":lineparts[ttindex+2],"count":lineparts[ttindex+3],"sum":lineparts[ttindex+4]}
-     docs['ttrdoc'] = {"metric": "ttr","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[ttrindex],"avg":lineparts[ttrindex+1],"max":lineparts[ttrindex+2],"count":lineparts[ttrindex+3],"sum":lineparts[ttrindex+4]}
-     docs['szdoc'] = {"metric": "sz","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[szindex],"avg":lineparts[szindex+1],"max":lineparts[szindex+2],"count":lineparts[szindex+3],"sum":lineparts[szindex+4]}
-     docs['fedoc'] = {"metric": "fe","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[feindex],"avg":lineparts[feindex+1],"max":lineparts[feindex+2],"count":lineparts[feindex+3],"sum":lineparts[feindex+4]}
-     docs['bedoc'] = {"metric": "be","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "min":lineparts[beindex],"avg":lineparts[beindex+1],"max":lineparts[beindex+2],"count":lineparts[beindex+3],"sum":lineparts[beindex+4]}
-     docs['stdoc'] = {"metric": "st","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex],
-                        "count_status_200":lineparts[stcountindex],"count_status_300":lineparts[stcountindex+1],"count_status_400":lineparts[stcountindex+2],"count_status_500":lineparts[stcountindex+3],"pct_fail_status":lineparts[stcountindex+4]}
-     if scope == 'endpoint':
-      docs['tqdoc']['endpoint'] = lineparts[rindex+4]
-      docs['tcdoc']['endpoint'] = lineparts[rindex+4]
-      docs['trdoc']['endpoint'] = lineparts[rindex+4]
-      docs['ttdoc']['endpoint'] = lineparts[rindex+4]
-      docs['ttrdoc']['endpoint'] = lineparts[rindex+4]
-      docs['szdoc']['endpoint'] = lineparts[rindex+4]
-      docs['fedoc']['endpoint'] = lineparts[rindex+4]
-      docs['bedoc']['endpoint'] = lineparts[rindex+4]
+     docs =  []
+     idindex,rindex,tindex,mindex = find_line_indexes(datatype)
+     if datatype == 'db':
+      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), "cluster": lineparts[rindex], "database": lineparts[rindex+1], "timestamp":lineparts[tindex],
+      "count_documents":lineparts[mindex],"count_deleted_document":lineparts[mindex+1], "size_disk":lineparts[mindex+2],"size_data":lineparts[mindex+3],
+      "count_shards":lineparts[mindex+4]}
+     elif datatype == 'view':
+      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), 
+              "cluster": lineparts[rindex], "database": lineparts[rindex+1], "viewdoc": lineparts[rindex+2],  "view": lineparts[rindex+3], "signature" : lineparts[rindex+4], "timestamp":lineparts[tindex],
+      "size_disk":lineparts[mindex+0],"size_data":lineparts[mindex+1],"size_active":lineparts[mindex+2],"updates_pending_total":lineparts[mindex+3],
+      "updates_pending_minimum":lineparts[mindex+4],"updates_pending_preferred":lineparts[mindex+5]} 
+     docs.append(dict(doc))
      return docs 
     except Exception as e:
-     logging.warn("{volumedata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
-
-def export_line_docs(es,linedocs,scope):
-    try:
-     today = datetime.date.today()
-     today_string = str(today.strftime("%Y%m%d"))
-     if scope == 'verb':
-      index_name = 'proxy_verb_'+ today_string 
-     if scope == 'endpoint':
-      index_name = 'proxy_endpoint_'+ today_string 
-     tqres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'0',body=linedocs['tqdoc'])
-     tcres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'1',body=linedocs['tcdoc'])
-     trres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'2',body=linedocs['trdoc'])
-     ttres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'3',body=linedocs['ttdoc'])
-     ttrres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'4',body=linedocs['ttrdoc'])
-     szres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'5',body=linedocs['szdoc'])
-     feres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'6',body=linedocs['fedoc'])
-     beres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'7',body=linedocs['bedoc'])
-     stres=es.index(index=index_name,doc_type="_doc",id=linedocs['id']+'8',body=linedocs['stdoc'])
-     return True 
-    except Exception as e:
-     logging.warn("{volumedata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
-     return False
+     logging.warn("{hostdata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
+     return docs 
 
 def execute_exportvolume(url,username,password,ssl,cert,fromtime,resultslocation):
-   try: 
+   try:
+      today = datetime.date.today()
+      today_string = str(today.strftime("%Y%m%d")) 
+      dbfile = "dbvolumestats_"+str(fromtime)
+      viewfile = "viewvolumestats_"+str(fromtime)
+      es = es_connect(url,username,password,ssl,cert)                     
       if os.path.exists(resultslocation):
-       filestart = "stats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_to_"+str(totime)
        for filename in os.listdir(resultslocation):
-        if filename.startswith(filestart):
-           logging.warn("{volumedata elasticsearch exporter} exporting from file ["+str(filename)+"]") 
-           es = es_connect(url,username,password,ssl,cert)                     
+        if filename.startswith(dbfile) or filename.startswith(viewfile) :
+           added=0
+           if filename.startswith('db'):
+            datatype = 'db'
+           elif filename.startswith('view'):
+            datatype = 'view'
+           index = 'couchdbvolume_'+datatype+'_'+today_string
+           filedocs=[]
            ef = open(resultslocation+'/'+filename,'r')
            eflines = ef.readlines()
-           lines_success = 0
-           lines_fail = 0
            for efline in eflines:
             if not 'mtime' in efline:
               eflineparts = efline.split(',') 
-              linedocs = get_line_docs(eflineparts,scope)
-              result = export_line_docs(es,linedocs,scope)
-              if result:
-               lines_success = lines_success + 1
-              else:
-               lines_fail = lines_fail + 1 
-           print("success=["+str(lines_success)+"] fail=["+str(lines_fail)+"]")
-           return True
+              filedocs = filedocs + get_line_docs(eflineparts,datatype,index)
+           added = export_file_docs(es,filedocs)
+           logging.warn("{volumedata elasticsearch exporter} exporting from file ["+str(filename)+"] to index ["+str(index)+"] Documents added=["+str(added)+"]")
+       return True
       else:
-       logging.warn("{volumedata elasticsearch exporter} resultslocation ["+str(resultslocation)+"] not found*")
+       logging.warn("{hostdata elasticsearch exporter} resultslocation ["+str(resultslocation)+"] not found*")
        return False 
    except Exception as e:
-      filestart = "stats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_"+str(totime)
-      logging.warn("{volumedata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
-      logging.warn("{volumedata elasticsearch exporter} exporting from file ["+str(filestart)+"*]")
+      logging.warn("{hostdata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
       return False 

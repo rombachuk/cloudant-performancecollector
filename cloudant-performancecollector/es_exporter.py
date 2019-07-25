@@ -9,6 +9,8 @@ import subprocess
 import requests
 from optparse import OptionParser
 from proxydata_esexport import execute_exportproxy
+from hostdata_esexport import execute_exporthost
+from volumedata_esexport import execute_exportvolume
 
 def process_config_file(cfile):
     resultslocation = '/opt/cloudant-performancecollector/results'
@@ -67,6 +69,13 @@ def options():
     return opts, args
 
 
+def process_fromperiod(fromtime):
+    if fromtime is None:
+      ftime = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    else: 
+      ftime = re.sub('[\/_\:-]','',fromtime) 
+    return ftime
+
 def process_timeperiod(fromtime,totime):
     if totime is None or totime == 'now':
       ttime = datetime.datetime.now().strftime("%Y%m%d%H%M")
@@ -77,7 +86,6 @@ def process_timeperiod(fromtime,totime):
     else: 
       ftime = re.sub('[\/_\:-]','',fromtime) 
     return ftime,ttime 
-    
 
 try:    
   requests.urllib3.disable_warnings()
@@ -113,10 +121,10 @@ if __name__ == "__main__":
           print("REQUESTS_CA_BUNDLE file ["+str(es_cert)+"] does not exist - all sessions will fail")
           logging.warn("REQUESTS_CA_BUNDLE file ["+str(es_cert)+"] does not exist - all sessions will fail")
 
-    if opts.data == 'proxy' or opts.data == 'client'  or opts.data == 'body'  or opts.data == 'metricsdb' or opts.data == 'volume':
-       valid_scope = True
+    if opts.data == 'proxy' or opts.data == 'client'  or opts.data == 'body'  or opts.data == 'host' or opts.data == 'volume':
+       valid_data = True
     else:
-       valid_scope = False
+       valid_data = False
 
     if not opts.scope or opts.scope == 'endpoint'  or opts.scope == 'verb' :
        if not opts.scope:
@@ -132,15 +140,26 @@ if __name__ == "__main__":
     else:
        valid_granularity = False
  
-    if opts.scope and valid_granularity:
-          if ((opts.data == 'proxy') or (opts.data == 'client') or (opts.data == 'body')):
-           opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
-           if len(opts.fromtime) == 12 and len(opts.totime) == 12:
-              resultsid = datetime.datetime.now().strftime("%Y%m%d%H%M%f")
-              if (opts.data == 'proxy'):  
-               execute_exportproxy(es_url,es_username,es_password,es_ssl,es_cert,\
+    if opts.data == 'volume':
+       opts.fromtime = process_fromperiod(opts.fromtime) 
+       if len(opts.fromtime) == 12:
+        execute_exportvolume(es_url,es_username,es_password,es_ssl,es_cert,\
+               opts.fromtime,results_location)
+        valid_selection = True
+    
+    if opts.data == 'host':
+       opts.fromtime = process_fromperiod(opts.fromtime) 
+       if len(opts.fromtime) == 12:
+        execute_exporthost(es_url,es_username,es_password,es_ssl,es_cert,\
+               opts.fromtime,results_location)
+        valid_selection = True
+    
+    if opts.data == 'proxy' and valid_scope and valid_granularity: 
+       opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
+       if len(opts.fromtime) == 12 and len(opts.totime) == 12:
+        execute_exportproxy(es_url,es_username,es_password,es_ssl,es_cert,\
                opts.fromtime,opts.totime,opts.granularity,opts.scope,results_location)
-              valid_selection = True
+        valid_selection = True
     
     if not valid_selection:
        print "perfagent_es_exporter: Command not recognised"

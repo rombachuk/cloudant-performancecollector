@@ -1,5 +1,5 @@
 #!/bin/bash 
- set -x
+# set -x
 nowepoch=`date +%s`
 let fromepoch=$nowepoch-$2*60
 let toepoch=$nowepoch-$3*60

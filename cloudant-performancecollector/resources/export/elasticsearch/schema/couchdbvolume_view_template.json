@@ -1,0 +1,22 @@
+{
+ "index_patterns" : ["couchdbvolume_view*"],
+ "settings": {
+ },
+ "mappings": {
+  "_doc" : {
+  "properties" : {
+    "cluster" : { "type" : "keyword" },
+    "database" : { "type" : "keyword" },
+    "viewdoc" : { "type" : "keyword" },
+    "view" : { "type" : "keyword" },
+    "signature" : { "type" : "keyword" },
+    "timestamp" : { "type" : "date", "format" : "epoch_second" }
+  },
+  "dynamic_templates": [
+   { "updates_as_integers": { "match_mapping_type": "string", "match": "updates_*", "mapping": { "type": "integer" }}},
+   { "count_as_integers": { "match_mapping_type": "string", "match": "count_*", "mapping": { "type": "integer" }}},
+   { "size_as_floats": { "match_mapping_type": "string", "match": "size_*", "mapping": { "type": "float" }}}
+  ]
+ }
+ }
+}

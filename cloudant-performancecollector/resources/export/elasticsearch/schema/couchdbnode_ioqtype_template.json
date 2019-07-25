@@ -1,0 +1,18 @@
+{
+ "index_patterns" : ["couchdbnode_ioqtype*"],
+ "settings": {
+ },
+ "mappings": {
+  "_doc" : {
+  "properties" : {
+    "cluster" : { "type" : "keyword" },
+    "host" : { "type" : "keyword" },
+    "ioqtype" : { "type" : "keyword" },
+    "timestamp" : { "type" : "date", "format" : "epoch_second" }
+  },
+  "dynamic_templates": [
+   { "count_as_integers": { "match_mapping_type": "string", "match": "count_*", "mapping": { "type": "integer" }}}
+  ]
+ }
+ }
+}
