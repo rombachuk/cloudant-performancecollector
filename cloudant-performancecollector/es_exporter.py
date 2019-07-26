@@ -12,6 +12,7 @@ from proxydata_esexport import execute_exportproxy
 from clientdata_esexport import execute_exportclient
 from hostdata_esexport import execute_exporthost
 from volumedata_esexport import execute_exportvolume
+from bodydata_esexport import execute_exportbody
 
 def process_config_file(cfile):
     resultslocation = '/opt/cloudant-performancecollector/results'
@@ -127,7 +128,7 @@ if __name__ == "__main__":
     else:
        valid_data = False
 
-    if not opts.scope or opts.scope == 'endpoint'  or opts.scope == 'verb' :
+    if not opts.scope or opts.scope == 'endpoint'  or opts.scope == 'verb' or opts.scope == 'body':
        if not opts.scope:
          opts.scope = 'verb'
        valid_scope = True
@@ -166,6 +167,13 @@ if __name__ == "__main__":
        opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
        if len(opts.fromtime) == 12 and len(opts.totime) == 12:
         execute_exportproxy(es_url,es_username,es_password,es_ssl,es_cert,\
+               opts.fromtime,opts.totime,opts.granularity,opts.scope,results_location)
+        valid_selection = True
+    
+    if opts.data == 'body' and valid_scope and valid_granularity: 
+       opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
+       if len(opts.fromtime) == 12 and len(opts.totime) == 12:
+        execute_exportbody(es_url,es_username,es_password,es_ssl,es_cert,\
                opts.fromtime,opts.totime,opts.granularity,opts.scope,results_location)
         valid_selection = True
     

@@ -13,41 +13,27 @@ from es_utils import es_connect
 from es_utils import export_file_docs
 
 def find_line_indexes(scope):
-     if scope == "endpoint":
+     if scope == "body":
       idindex = 0
       rindex = 1
-      tindex = 7
-      tqindex = 8 
-      tcindex = 13
-      trindex = 18
-      ttindex = 23
-      ttrindex = 28
-      szindex = 33
-      feindex = 38
-      beindex = 43
-      stcountindex = 48
-     elif scope == "verb":
-      idindex = 0
-      rindex = 1
-      tindex = 6
-      tqindex = 7 
-      tcindex = 12
-      trindex = 17
-      ttindex = 22
-      ttrindex = 27
-      szindex = 32
-      feindex = 37
-      beindex = 42
-      stcountindex = 47
+      tindex = 9
+      tqindex = 10
+      tcindex = 15
+      trindex = 20
+      ttindex = 25
+      ttrindex = 30
+      szindex = 35
+      feindex = 40
+      beindex = 45
+      stcountindex = 50
      return idindex,rindex,tindex,tqindex,tcindex,trindex,ttindex,ttrindex,szindex,feindex,beindex,stcountindex
 
 def get_line_docs(lineparts,scope,index):
     try:
      docs = [] 
      idindex,rindex,tindex,tqindex,tcindex,trindex,ttindex,ttrindex,szindex,feindex,beindex,stcountindex = find_line_indexes(scope)
-     doc_keywords = {"_index":index,"_type":"_doc","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "database": lineparts[rindex+2], "verb": lineparts[rindex+3], "timestamp":lineparts[tindex]}
-     if scope == 'endpoint':
-      doc_keywords['endpoint'] = lineparts[rindex+4]
+     doc_keywords = {"_index":index,"_type":"_doc","cluster": lineparts[rindex], "loghost": lineparts[rindex+1], "client": lineparts[rindex+2], "database" : lineparts[rindex+3],
+                     "verb": lineparts[rindex+4], "endpoint": lineparts[rindex+5], "body": lineparts[rindex+6], "timestamp":lineparts[tindex]}
      tqvals= {"_id": str(lineparts[tindex])+str(lineparts[idindex])+'0',"metric": 'tq', "min":lineparts[tqindex],"avg":lineparts[tqindex+1],"max":lineparts[tqindex+2],"count":lineparts[tqindex+3],"sum":lineparts[tqindex+4]}
      tcvals= {"_id": str(lineparts[tindex])+str(lineparts[idindex])+'1',"metric": 'tc', "min":lineparts[tcindex],"avg":lineparts[tcindex+1],"max":lineparts[tcindex+2],"count":lineparts[tcindex+3],"sum":lineparts[tcindex+4]}
      trvals= {"_id": str(lineparts[tindex])+str(lineparts[idindex])+'2',"metric": 'tr', "min":lineparts[trindex],"avg":lineparts[trindex+1],"max":lineparts[trindex+2],"count":lineparts[trindex+3],"sum":lineparts[trindex+4]}
@@ -77,33 +63,44 @@ def get_line_docs(lineparts,scope,index):
      docs.append(dict(stvals))
      return docs 
     except Exception as e:
-     logging.warn("{proxydata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
+     logging.warn("{bodydata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
      return docs 
 
 
-def execute_exportproxy(url,username,password,ssl,cert,fromtime,totime,granularity,scope,resultslocation):
+def execute_exportbody(url,username,password,ssl,cert,fromtime,totime,granularity,scope,resultslocation):
    try: 
-      index = 'proxy_'+str(scope)+'_'+str(fromtime[:8])
+      index = 'body_'+str(granularity)+'_'+str(fromtime[:8])
       es = es_connect(url,username,password,ssl,cert)                     
       if os.path.exists(resultslocation):
-       filestart = "stats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_to_"+str(totime)
+       filestart = "bodystats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_to_"+str(totime)
        for filename in os.listdir(resultslocation):
         if filename.startswith(filestart):
            ef = open(resultslocation+'/'+filename,'r')
            eflines = ef.readlines()
            filedocs = []
+           linecount = 0
+           linebatch = 0
+           batchsize = 500           
            for efline in eflines:
+            linecount = linecount+1
+            linebatch = linebatch+1
+            if linebatch >= batchsize:
+             print("lines processed = "+str(linecount))
+             linebatch = 0
+             added = export_file_docs(es,filedocs)
+             logging.warn("{bodydata elasticsearch exporter} exporting from file ["+str(filename)+"] to index ["+str(index)+"] Documents added=["+str(added)+"]") 
+             filedocs = []
             if not 'mtime' in efline:
               eflineparts = efline.split(',') 
               filedocs = filedocs + get_line_docs(eflineparts,scope,index)
            added = export_file_docs(es,filedocs)
-           logging.warn("{proxydata elasticsearch exporter} exporting from file ["+str(filename)+"] to index ["+str(index)+"] Documents added=["+str(added)+"]") 
+           logging.warn("{bodydata elasticsearch exporter} exporting from file ["+str(filename)+"] to index ["+str(index)+"] Documents added=["+str(added)+"]") 
            return True
       else:
-       logging.warn("{proxydata elasticsearch exporter} resultslocation ["+str(resultslocation)+"] not found*")
+       logging.warn("{bodydata elasticsearch exporter} resultslocation ["+str(resultslocation)+"] not found*")
        return False 
    except Exception as e:
-      filestart = "stats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_"+str(totime)
-      logging.warn("{proxydata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
-      logging.warn("{proxydata elasticsearch exporter} exporting from file ["+str(filestart)+"*]")
+      filestart = "bodystats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_"+str(totime)
+      logging.warn("{bodydata elasticsearch exporter} Request Processing Unexpected  Error : "+str(e))
+      logging.warn("{bodydata elasticsearch exporter} exporting from file ["+str(filestart)+"*]")
       return False 

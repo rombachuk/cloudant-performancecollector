@@ -83,9 +83,7 @@ def get_line_docs(lineparts,scope,index):
 
 def execute_exportclient(url,username,password,ssl,cert,fromtime,totime,granularity,scope,resultslocation):
    try: 
-      today = datetime.date.today()
-      today_string = str(today.strftime("%Y%m%d"))
-      index = 'client_'+str(scope)+'_'+today_string
+      index = 'client_'+str(scope)+'_'+str(fromtime[:8])
       es = es_connect(url,username,password,ssl,cert)                     
       if os.path.exists(resultslocation):
        filestart = "clientstats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_to_"+str(totime)
