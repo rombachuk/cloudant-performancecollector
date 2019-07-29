@@ -40,7 +40,7 @@ then
 read -p 'Drop and recreate elasticsearch templates (y/n): ' confirmesschema
 if [ "$confirmesschema" == "y" ]
 then
- "Placeholder"
+ /opt/cloudant-performancecollector/resources/export/elasticsearch/schema/template_install.sh
 fi
 fi
 read -p 'Export to Postgres (y/n): ' confirmpg
