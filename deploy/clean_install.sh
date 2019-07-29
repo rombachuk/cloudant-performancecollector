@@ -21,7 +21,9 @@ else
  if [ "$confirmoffline" == "y" ]
  then
  cp ../offline/wheelhouse.tar.gz /opt/cloudant-performancecollector
- tar xzvf /opt/cloudant-performancecollector/wheelhouse.tar.gz
+ cd /opt/cloudant-performancecollector
+ /usr/bin/tar xzvf /opt/cloudant-performancecollector/wheelhouse.tar.gz
+ /usr/bin/virtualenv /opt/cloudant-performancecollector/venv
  source /opt/cloudant-performancecollector/venv/bin/activate
  cd /opt/cloudant-performancecollector/wheelhouse
  /opt/cloudant-performancecollector/venv/bin/python pip-19.2.1-py2.py3-none-any.whl/pip install --no-index pip-19.2.1-py2.py3-none-any.whl setuptools-41.0.1-py2.py3-none-any.whl
