@@ -17,7 +17,17 @@ then
  pip install pandas
  pip install flask
 else
- echo "Perform offline install"
+ read -p 'Do you really want to perform offline install (y/n): ' confirmoffline
+ if [ "$confirmoffline" == "y" ]
+ then
+ cp ../offline/wheelhouse.tar.gz /opt/cloudant-performancecollector
+ tar xzvf /opt/cloudant-performancecollector/wheelhouse.tar.gz
+ source /opt/cloudant-performancecollector/venv/bin/activate
+ cd /opt/cloudant-performancecollector/wheelhouse
+ /opt/cloudant-performancecollector/venv/bin/python pip-19.2.1-py2.py3-none-any.whl/pip install --no-index pip-19.2.1-py2.py3-none-any.whl setuptools-41.0.1-py2.py3-none-any.whl
+ pip install -r /opt/cloudant-performancecollector/wheelhouse/requirements.txt --no-index --find-links /opt/cloudant-performancecollector/wheelhouse
+ cd -
+ fi
 fi
 cp /opt/cloudant-performancecollector/resources/collect/scripts/cpc_api_processor /etc/init.d
 systemctl enable cpc_api_processor
