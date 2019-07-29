@@ -9,7 +9,8 @@ BASE=/var/run
 PID=$BASE/cpcperfagentprocessor.pid
 LOG=$BASE/cpcpperfagentprocessor.log
 LOCKFILE=/var/lock/subsys/cpcpperfagentprocessor-archive
-CMD='/usr/bin/python /opt/cloudant-performancecollector/perfagentworker.py'
+VENV='source /opt/cloudant-performancecollector/venv/bin/activate'
+CMD='/opt/cloudant-performancecollector/venv/bin/python /opt/cloudant-performancecollector/perfagentworker.py'
 COMMAND="$CMD"
 
 USR=user
@@ -39,6 +40,7 @@ start() {
         echo "==== Start"
         touch $PID
         touch $LOCKFILE
+        $VENV
         if nohup $COMMAND >>$LOG 2>&1 &
         then echo $! >$PID
              echo "Done."

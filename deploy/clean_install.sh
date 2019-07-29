@@ -7,7 +7,7 @@ cp /etc/init.d/cpc_api_processor /opt/cloudant-performancecollector-bkp-$now/ini
 rm -rf /opt/cloudant-performancecollector
 rm -f /etc/init.d/cpc_api_processor
 cp -r ../cloudant-performancecollector /opt
-read -p 'Does this server have access to pip (Online install) (y/n): ' confirmonline
+read -p 'Does this server have online access for pip commands (Online install) (y/n): ' confirmonline
 if [ "$confirmonline" == "y" ]
 then
  /usr/bin/virtualenv /opt/cloudant-performancecollector/venv
@@ -16,10 +16,16 @@ then
  pip install elasticsearch
  pip install pandas
  pip install flask
+else
+ echo "Perform offline install"
 fi
 cp /opt/cloudant-performancecollector/resources/collect/scripts/cpc_api_processor /etc/init.d
 systemctl enable cpc_api_processor
 systemctl start cpc_api_processor
+read -p 'Export to Elasticsearch (y/n): ' confirmes
+if [ "$confirmes" == "y" ]
+then
+fi
 read -p 'Export to Postgres (y/n): ' confirmpg
 if [ "$confirmpg" == "y" ]
 then
