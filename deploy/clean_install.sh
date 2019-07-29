@@ -25,6 +25,11 @@ systemctl start cpc_api_processor
 read -p 'Export to Elasticsearch (y/n): ' confirmes
 if [ "$confirmes" == "y" ]
 then
+read -p 'Drop and recreate elasticsearch templates (y/n): ' confirmesschema
+if [ "$confirmesschema" == "y" ]
+then
+ "Placeholder"
+fi
 fi
 read -p 'Export to Postgres (y/n): ' confirmpg
 if [ "$confirmpg" == "y" ]
