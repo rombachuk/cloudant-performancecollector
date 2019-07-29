@@ -68,6 +68,7 @@ def process_collectconfig(cfile):
     status_index = int(10)
     size_index = int(11)
     base_index = int(19)
+    connections_index = int(15)
     if cfile and os.path.isfile(cfile):
       cf = open(cfile,'r')
       cflines = cf.readlines()
@@ -89,13 +90,15 @@ def process_collectconfig(cfile):
             size_index = int(cflineparts[1])
           elif len(cflineparts) == 2 and cflineparts[0] == 'base_index':
             base_index = int(cflineparts[1])
+          elif len(cflineparts) == 2 and cflineparts[0] == 'connections_index':
+            connections_index = int(cflineparts[1])
           else:
             pass
       cf.close()
-    return linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index
+    return linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index,connections_index
 
 def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,loghost,clusterurl,\
-        linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index): 
+        linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index,connections_index): 
     database='unknown'
     verb='unknown'
     endpoint='unknown'
@@ -150,11 +153,16 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
         clientip = client[0]
         timings = lineparts[timings_index].split('/')
         tq = int(timings[0])
+        tc = int(timings[2])
         tr = int(timings[3])
         tt = int(timings[4])
         ttr = int(tt) - int(tr)
         status = int(lineparts[status_index])
         size = int(lineparts[size_index])
+        conns = lineparts[connections_index].split('/')
+        feconn = int(conns[1])
+        beconn = int(conns[2])
+        srvconn = int(conns[3])
         if len(restcall) > 1:
          params = restcall[1]
         if len(url) > 1:
@@ -182,6 +190,8 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
           endpoint = 'singledocument'
         elif len(url) == 4 and str(url[2]).startswith('_local'):
           endpoint = 'replicationdocument'
+        elif len(url) >= 5 and str(url[4]).startswith('_update'):
+          endpoint = 'updatefunction'
         elif database == 'metrics_app' and 'statistics' in endpoint:
           endpoint = 'metricsdashboard'
         elif '"<BADREQ>"' in thisline:
@@ -202,7 +212,7 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
           body = "singlekey_includefalse"
         if (int(linetime) >= int(fromtime)) and (int(linetime) < int(totime)):
           if not exclude_entry(database,verb,endpoint,exclusions) and not exclude_client(clientip,exclusions):
-            thislist.append([clusterurl,loghost,clientip,linetime,markertime,markertime_epoch,database,verb,endpoint,body,tq,tr,tt,ttr,status,size])
+            thislist.append([clusterurl,loghost,clientip,linetime,markertime,markertime_epoch,database,verb,endpoint,body,tq,tc,tr,tt,ttr,status,size,feconn,beconn,srvconn])
         return linetime 
      except Exception as e:
         logging.warn('{collect data processor} line processing failure'+str(thisline))
@@ -213,7 +223,7 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
 
 def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_url):
    linetime_format,linetime_index,linetime_start,linetime_end,\
-    timings_index,status_index,size_index,base_index = process_collectconfig('/opt/cloudant-specialapi/perfagent_collect.conf')
+    timings_index,status_index,size_index,base_index,connections_index = process_collectconfig('/opt/cloudant-performancecollector/resources/collect/configuration/perfagent_collect.conf')
    linedbstatlist=[]
    if os.path.isfile(logfile):
      lf = None
@@ -230,7 +240,7 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
      endlinefound = False
      while ((line != '') and not endlinefound):
       linetime = process_dbstatline(line,fromtime,totime,linedbstatlist,granularity,exclusions,loghost,cluster_url,\
-        linetime_format,linetime_index,linetime_start,linetime_end,timings_index,status_index,size_index,base_index)
+        linetime_format,linetime_index,linetime_start,linetime_end,timings_index,status_index,size_index,base_index,connections_index)
       if not startlinefound:
        if int(linetime) >= int(fromtime):
         startlinefound = True
@@ -244,7 +254,7 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
       print('{cloudant body data collector} No lines found for selected collection period starting <' + str(fromtime) + '>')
       logging.warn('{cloudant body data collector} No lines found for selected collection period starting <' + str(fromtime) + '>')
      lf.close()
-   return pd.DataFrame(linedbstatlist,columns=['cluster','loghost','client','ltime','mtime', 'mtime_epoch','database','verb','endpoint','body','tq','tr','tt','ttr','status','size'])
+   return pd.DataFrame(linedbstatlist,columns=['cluster','loghost','client','ltime','mtime', 'mtime_epoch','database','verb','endpoint','body','tq','tc','tr','tt','ttr','status','size','feconn','beconn','srvconn'])
 
 def get_groups(stats,groupcriteria):
     try:
@@ -258,6 +268,7 @@ def get_groups(stats,groupcriteria):
       st4_methods =  st4_dbstats.groupby(groupcriteria,as_index=False)
       st5_methods =  st5_dbstats.groupby(groupcriteria,as_index=False)
       tq = (methods['tq'].agg({'tqmin':np.min,'tqmax':np.max,'tqavg':np.mean,'tqsum':np.sum,'tqcount':np.size})).round(1)
+      tc = (methods['tc'].agg({'tcmin':np.min,'tcmax':np.max,'tcavg':np.mean,'tcsum':np.sum,'tccount':np.size})).round(1)
       tr = (methods['tr'].agg({'trmin':np.min,'trmax':np.max,'travg':np.mean,'trsum':np.sum,'trcount':np.size})).round(1)
       tt = (methods['tt'].agg({'ttmin':np.min,'ttmax':np.max,'ttavg':np.mean,'ttsum':np.sum,'ttcount':np.size})).round(1)
       ttr = (methods['ttr'].agg({'ttrmin':np.min,'ttrmax':np.max,'ttravg':np.mean,'ttrsum':np.sum,'ttrcount':np.size})).round(1)
@@ -266,11 +277,16 @@ def get_groups(stats,groupcriteria):
       st4 = (st4_methods['status'].agg({'st4min':np.min,'st4max':np.max,'st4avg':np.mean,'st4sum':np.sum,'st4count':np.size})).round(1)
       st5 = (st5_methods['status'].agg({'st5min':np.min,'st5max':np.max,'st5avg':np.mean,'st5sum':np.sum,'st5count':np.size})).round(1)
       sz = (methods['size'].agg({'szmin':np.min,'szmax':np.max,'szavg':np.mean,'szsum':np.sum,'szcount':np.size})).round(1)
-      op1 = pd.merge(tq,tr,on=groupcriteria)
-      op2 = pd.merge(op1,tt,on=groupcriteria)
+      fe = (methods['feconn'].agg({'femin':np.min,'femax':np.max,'feavg':np.mean,'fesum':np.sum,'fecount':np.size})).round(1)
+      be = (methods['beconn'].agg({'bemin':np.min,'bemax':np.max,'beavg':np.mean,'besum':np.sum,'becount':np.size})).round(1)
+      op1 = pd.merge(tq,tc,on=groupcriteria)
+      op11 = pd.merge(op1,tr,on=groupcriteria)
+      op2 = pd.merge(op11,tt,on=groupcriteria)
       op3 = pd.merge(op2,ttr,on=groupcriteria)
       op4 = pd.merge(op3,sz,on=groupcriteria)
-      op5 = pd.merge(op4,st2,on=groupcriteria,how='outer').fillna(0)
+      op41 = pd.merge(op4,fe,on=groupcriteria)
+      op42 = pd.merge(op41,be,on=groupcriteria)
+      op5 = pd.merge(op42,st2,on=groupcriteria,how='outer').fillna(0)
       op6 = pd.merge(op5,st3,on=groupcriteria,how='outer').fillna(0)
       op7 = pd.merge(op6,st4,on=groupcriteria,how='outer').fillna(0)
       op8 = pd.merge(op7,st5,on=groupcriteria,how='outer').fillna(0)

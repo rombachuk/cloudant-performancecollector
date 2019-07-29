@@ -1,8 +1,0 @@
-{
-"_id":"_design/daily_view",
-"views":{
-"stats_by_day": {
-"map":"function(doc) { if (doc.metricsType) { var date = new Date(doc.StatTimestamp); var m = date.getMonth()+1; var y = date.getFullYear(); var d = date.getDate(); emit([y,m,d],1) } }"
- }
-}
-}

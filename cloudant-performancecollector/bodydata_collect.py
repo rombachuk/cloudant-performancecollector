@@ -48,9 +48,14 @@ def get_body_groupcriteria(granularity,scope):
 def generate_body_stats_output(op,granularity,scope,fromtime,totime,location,id,format):
     if os.path.exists(location):
       ofile = location + '/bodystats_' + scope + '_by_' + granularity + '_' + fromtime + '_to_' + totime + '_' + id + '.csv'
-      columns=['mtime','mtime_epoch','tqmin','tqavg','tqmax','tqcount','tqsum','trmin','travg','trmax','trcount','trsum',\
+      columns=['mtime','mtime_epoch','tqmin','tqavg','tqmax','tqcount','tqsum',\
+               'tcmin','tcavg','tcmax','tccount','tcsum',\
+               'trmin','travg','trmax','trcount','trsum',\
                'ttmin','ttavg','ttmax','ttcount','ttsum','ttrmin','ttravg','ttrmax','ttrcount','ttrsum',\
-               'szmin','szavg','szmax','szcount','szsum','st2count','st3count','st4count','st5count','stfailpct'] 
+               'szmin','szavg','szmax','szcount','szsum',\
+               'femin','feavg','femax','fecount','fesum',\
+               'bemin','beavg','bemax','becount','besum',\
+               'st2count','st3count','st4count','st5count','stfailpct']
       if scope == 'all':
        columns = ['cluster','loghost'] + columns
       elif scope == 'client':
@@ -125,7 +130,7 @@ except:
     logging.warn("{cloudant body data collector} Unable to disable urllib3 warnings")
     pass
 
-defaults_file = "/opt/cloudant-performancecollector/perfagent.conf"
+defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
 logfilename = "/var/log/cloudant_bodydata_collector.log"
 
 logging.basicConfig(filename = logfilename, level=logging.WARN,
@@ -160,7 +165,7 @@ if __name__ == "__main__":
        opts.eventsexclusionsfile = default_eventsexclusionsfile
 
     if not opts.statsexclusionsfile:
-       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/bodydata_stats_exclusions.info'
+       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/resources/collect/configuration/bodydata_stats_exclusions.info'
 
     if not opts.scope:
        opts.scope = default_scope

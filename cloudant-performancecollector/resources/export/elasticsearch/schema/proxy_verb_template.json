@@ -1,0 +1,26 @@
+{
+ "index_patterns" : ["proxy_verb*"],
+ "settings": {
+ },
+ "mappings": {
+  "_doc" : {
+  "properties" : {
+    "metric" : { "type" : "keyword" },
+    "cluster" : { "type" : "keyword" },
+    "loghost" : { "type" : "keyword" },
+    "database" : { "type" : "keyword" },
+    "verb" : { "type" : "keyword" },
+    "timestamp" : { "type" : "date", "format" : "epoch_second" },
+    "min" : { "type" : "integer" },
+    "avg" : { "type" : "float" },
+    "max" : { "type" : "integer" },
+    "sum" : { "type" : "integer" },
+    "count" : { "type" : "integer" }
+  },
+  "dynamic_templates": [
+   { "count_as_integers": { "match_mapping_type": "string", "match": "count_*", "mapping": { "type": "integer" }}},
+   { "pct_as_floats": { "match_mapping_type": "string", "match": "pct_*", "mapping": { "type": "float" }}}
+  ]
+ }
+ }
+}
