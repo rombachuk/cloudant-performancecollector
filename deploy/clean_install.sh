@@ -7,6 +7,16 @@ cp /etc/init.d/cpc_api_processor /opt/cloudant-performancecollector-bkp-$now/ini
 rm -rf /opt/cloudant-performancecollector
 rm -f /etc/init.d/cpc_api_processor
 cp -r ../cloudant-performancecollector /opt
+read -p 'Does this server have access to pip (Online install) (y/n): ' confirmonline
+if [ "$confirmonline" == "y" ]
+then
+ /usr/bin/virtualenv /opt/cloudant-performancecollector/venv
+ source /opt/cloudant-performancecollector/venv/bin/activate
+ pip install requests
+ pip install elasticsearch
+ pip install pandas
+ pip install flask
+fi
 cp /opt/cloudant-performancecollector/resources/collect/scripts/cpc_api_processor /etc/init.d
 systemctl enable cpc_api_processor
 systemctl start cpc_api_processor
