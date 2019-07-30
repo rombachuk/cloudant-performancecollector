@@ -68,7 +68,7 @@ def execute_exporthost(url,username,password,ssl,cert,fromtime,resultslocation):
             datatype = 'ioqtype'
            elif filename.startswith('host'):
             datatype = 'host'
-           index = 'couchdbnode_'+datatype+'_'+today_string
+           index = 'couchdbstats-es-couchdbnode_'+datatype+'_'+today_string
            filedocs=[]
            ef = open(resultslocation+'/'+filename,'r')
            eflines = ef.readlines()

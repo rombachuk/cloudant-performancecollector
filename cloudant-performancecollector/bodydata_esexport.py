@@ -69,7 +69,7 @@ def get_line_docs(lineparts,scope,index):
 
 def execute_exportbody(url,username,password,ssl,cert,fromtime,totime,granularity,scope,resultslocation):
    try: 
-      index = 'body_'+str(granularity)+'_'+str(fromtime[:8])
+      index = 'couchdbstats-es-body_'+str(granularity)+'_'+str(fromtime[:8])
       es = es_connect(url,username,password,ssl,cert)                     
       if os.path.exists(resultslocation):
        filestart = "bodystats_"+str(scope)+"_by_"+str(granularity)+"_"+str(fromtime)+"_to_"+str(totime)

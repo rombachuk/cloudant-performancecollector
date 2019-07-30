@@ -14,8 +14,9 @@ escertfile=`/usr/bin/grep 'certificate' /opt/cloudant-performancecollector/resou
 if [ $estls == "enabled" ]
 then
 escacert=`/usr/bin/cat $escertfile`
-esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'"'
-#esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'","secureJsonData":{"tlsCACert":"'$escacert'"}'
+escacertf=`echo $escacert | sed -e 's/\s/\\\n/g' |sed -e 's/BEGIN\\\nCERT/BEGIN CERT/g' | sed -e 's/END\\\nCERT/END CERT/g'`
+#esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'"'
+esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'","secureJsonData":{"tlsCACert":"'$escacertf'"}'
 else
 esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'"'
 fi
