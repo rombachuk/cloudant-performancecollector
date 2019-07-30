@@ -28,9 +28,11 @@ json3='{"name":"couchdbstats_clientverb","database":"couchdbstats_client_verb*",
 json4='{"name":"couchdbstats_proxyverb","database":"couchdbstats_proxy_verb*",'$esconn','$others'}'
 json5='{"name":"couchdbstats_proxyendpoint","database":"couchdbstats_proxy_endpoint*",'$esconn','$others'}'
 json6='{"name":"couchdbstats_bodyminute","database":"couchdbstats_body_minute*",'$esconn','$others'}'
-json7='{"name":"couchdbstats_couchdbnodehost","database":"couchdbnode_host*",'$esconn','$others'}'
-json8='{"name":"couchdbstats_couchdbnodeioqtype","database":"couchdbnode_ioqtype*",'$esconn','$others'}'
-json9='{"name":"couchdbstats_couchdbnodesmoosh","database":"couchdbnode_smoosh*",'$esconn','$others'}'
+json7='{"name":"couchdbstats_couchdbnodehost","database":"couchdbstats_couchdbnode_host*",'$esconn','$others'}'
+json8='{"name":"couchdbstats_couchdbnodeioqtype","database":"couchdbstats_couchdbnode_ioqtype*",'$esconn','$others'}'
+json9='{"name":"couchdbstats_couchdbnodesmoosh","database":"couchdbstats_couchdbnode_smoosh*",'$esconn','$others'}'
+json10='{"name":"couchdbstats_couchdbvolumedb","database":"couchdbstats_couchdbvolume_db*",'$esconn','$others'}'
+json11='{"name":"couchdbstats_couchdbvolumeview","database":"couchdbstats_couchdbvolume_view*",'$esconn','$others'}'
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json1'"
 eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json2'"
@@ -46,6 +48,10 @@ eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json7'"
 eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json8'"
+eval $curlcmd
+curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json10'"
+eval $curlcmd
+curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json11'"
 eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json9'"
 eval $curlcmd
