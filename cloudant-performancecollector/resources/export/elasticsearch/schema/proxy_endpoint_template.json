@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["proxy_endpoint*"],
+ "index_patterns" : ["couchdbstats_proxy_endpoint*"],
  "settings": {
  },
  "mappings": {

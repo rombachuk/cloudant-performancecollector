@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["couchdbvolume_view*"],
+ "index_patterns" : ["couchdbstats_couchdbvolume_view*"],
  "settings": {
  },
  "mappings": {

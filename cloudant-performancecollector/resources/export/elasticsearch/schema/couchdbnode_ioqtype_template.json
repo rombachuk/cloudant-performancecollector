@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["couchdbnode_ioqtype*"],
+ "index_patterns" : ["couchdbstats_couchdbnode_ioqtype*"],
  "settings": {
  },
  "mappings": {
