@@ -2,7 +2,7 @@
 
 ### Planning your deployment
 
-[architecture]: perfagent-architecture.png
+[architecture]: pc1.jpg
 
 ![architecture]
  
