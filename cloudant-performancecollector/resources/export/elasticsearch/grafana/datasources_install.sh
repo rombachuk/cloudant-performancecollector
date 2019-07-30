@@ -21,9 +21,10 @@ else
 esconn='"url":"'$esurl'","basicAuthUser":"'$esuser'","basicAuthPassword":"'$espass'"'
 fi
 others=`cat others.json`
+others1s=`cat others1s.json`
 echo -e "Installing grafana datasources"
 json1='{"name":"couchdbstats_bodyminute","database":"couchdbstats_body_minute*",'$esconn','$others'}'
-json2='{"name":"couchdbstats_bodysecond","database":"couchdbstats_body_second*",'$esconn','$others'}'
+json2='{"name":"couchdbstats_bodysecond","database":"couchdbstats_body_second*",'$esconn','$others1s'}'
 json3='{"name":"couchdbstats_clientverb","database":"couchdbstats_client_verb*",'$esconn','$others'}'
 json4='{"name":"couchdbstats_proxyverb","database":"couchdbstats_proxy_verb*",'$esconn','$others'}'
 json5='{"name":"couchdbstats_proxyendpoint","database":"couchdbstats_proxy_endpoint*",'$esconn','$others'}'
