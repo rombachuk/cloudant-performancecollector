@@ -205,7 +205,7 @@ admincredentials    bWlk********3MHJk
 * The clusterurl should be the vip of the cloudant local cluster.
 * The admin credentials shoud be a base64encoding of the string `user:password` where the user is a cluster admin user.  
 
-***Elasticsearch target : Configuration data export - step1 (resources/export/elasticsearch/configuration/perfagent\_es_connection.info)***
+***for Elasticsearch target : Configuration data export - step1 (resources/export/elasticsearch/configuration/perfagent\_es_connection.info)***
 
 ```
 url		https://my_es_host.databases.appdomain.cloud:31739	
@@ -225,11 +225,23 @@ You can do generate the `credentials` string from the command prompt eg
 Y2xvdWRhbnQ6cGFzc3cwcmQK 
 ```   
 
-***Elasticsearch target : Configuration data export - step2 (resources/export/elasticsearch/configuration/certificates)***
+***for Elasticsearch target : Configuration data export - step2 (resources/export/elasticsearch/configuration/certificates)***
 
 Place your CAcert certificate at this location. You must match it with the filename identified in step1 above. 
 
-***Postgres target : Configuration data export - step2 (resources/export/postgres/configuration/perfagent\_pg_credentials.info)*** 
+
+***for Postgres target : Configuration data export - step1 (resources/export/postgres/configuration/perfagent\_pg_db.info)
+
+Set up the hostname:db string for use by the postgres loading scripts.
+The expected format is postgreshost:db . The :  is important
+
+```
+ldap.bkp.ibm.com:postgres    
+```   
+* The postgres host would be `ldap.bkp.ibm.com`.
+* The postgres database would be `postgres` (postgres is the default).  
+
+***for Postgres target : Configuration data export - step2 (resources/export/postgres/configuration/perfagent\_pg_credentials.info)*** 
 
 Set up the pguser:pgpassword as a base64 string for use by the postgres loading scripts. You can do this from the shell using 
 
