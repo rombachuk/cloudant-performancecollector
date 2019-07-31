@@ -80,7 +80,8 @@ Export is supported for:
 
 The companion opensource deliverable 'Cloudant Performance Collector Dashboards' is provided to provide a default set of dashboards which work with the exported data. 
 
-* Grafana dashboards are available for : postgres, elasticsearch  
+* Grafana dashboards are available for : postgres, elasticsearch 
+
 * Kibana dashboards are available for : elasticsearch
 
 
