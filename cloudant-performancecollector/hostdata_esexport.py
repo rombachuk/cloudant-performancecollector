@@ -9,6 +9,7 @@ import select
 import re
 import os
 import json
+from uuid import uuid1
 from es_utils import es_connect
 from es_utils import export_file_docs
 
@@ -36,14 +37,14 @@ def get_line_docs(lineparts,datatype,index):
      docs =  []
      idindex,rindex,tindex,mindex = find_line_indexes(datatype)
      if datatype == 'host':
-      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "timestamp":lineparts[tindex],
+      doc = { "_index":index,"_type":"_doc","_id": uuid1(), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "timestamp":lineparts[tindex],
       "count_document_writes":lineparts[mindex],"count_document_inserts":lineparts[mindex+1], "max_ioq_latency":lineparts[mindex+2],"median_ioq_latency":lineparts[mindex+3],
       "percentile_90_ioq_latency":lineparts[mindex+4],"percentile_99_ioq_latency":lineparts[mindex+5],"percentile_999_ioq_latency":lineparts[mindex+6],}
      elif datatype == 'ioqtype':
-      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "ioqtype": lineparts[rindex+2], "timestamp":lineparts[tindex],
+      doc = { "_index":index,"_type":"_doc","_id": uuid1(), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "ioqtype": lineparts[rindex+2], "timestamp":lineparts[tindex],
       "count_requests":lineparts[mindex]}
      elif datatype == 'smoosh':
-      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "channel": lineparts[rindex+2], "timestamp":lineparts[tindex],
+      doc = { "_index":index,"_type":"_doc","_id": uuid1(), "cluster": lineparts[rindex], "host": lineparts[rindex+1], "channel": lineparts[rindex+2], "timestamp":lineparts[tindex],
       "count_active_jobs":lineparts[mindex],"count_waiting_jobs":lineparts[mindex+1],"count_starting_jobs":lineparts[mindex+2]}
      docs.append(dict(doc))
      return docs 

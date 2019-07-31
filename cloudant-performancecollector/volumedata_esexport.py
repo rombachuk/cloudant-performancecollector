@@ -9,6 +9,7 @@ import select
 import re
 import os
 import json
+from uuid import uuid1
 from es_utils import es_connect
 from es_utils import export_file_docs
 
@@ -35,7 +36,7 @@ def get_line_docs(lineparts,datatype,index):
       "count_documents":lineparts[mindex],"count_deleted_document":lineparts[mindex+1], "size_disk":lineparts[mindex+2],"size_data":lineparts[mindex+3],
       "count_shards":lineparts[mindex+4]}
      elif datatype == 'view':
-      doc = { "_index":index,"_type":"_doc","_id": str(lineparts[tindex])+str(lineparts[idindex]), 
+      doc = { "_index":index,"_type":"_doc","_id": uuid1(), 
               "cluster": lineparts[rindex], "database": lineparts[rindex+1], "viewdoc": lineparts[rindex+2],  "view": lineparts[rindex+3], "signature" : lineparts[rindex+4], "timestamp":lineparts[tindex],
       "size_disk":lineparts[mindex+0],"size_data":lineparts[mindex+1],"size_active":lineparts[mindex+2],"updates_pending_total":lineparts[mindex+3],
       "updates_pending_minimum":lineparts[mindex+4],"updates_pending_preferred":lineparts[mindex+5]} 
