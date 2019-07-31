@@ -167,12 +167,12 @@ This option is used when a brand new install is required, or when an existing in
 
 Several steps are needed :  
   
-* configure haproxy token setup in `cloudant-performancecollector/resources/collect/configuration/perfagent_collect.conf`
-* configure cluster access in `cloudant-performancecollector/resources/collect/configuration/perfagent_connection.info`
-* postgres target: configure export target in `cloudant-performancecollector/resources/export/postgres/configuration` 
-* es target: configure export target in `cloudant-performancecollector/resources/export/elasticsearch/configuration`
-* configure exclusions for data collection (proxydata and clientdata)
-* configure exclusions and thresholds for event-detection (proxydata only) - optional
+* configure haproxy token setup 
+* configure cluster access
+* postgres target: configure export target 
+* es target: configure export target
+* configure exclusions for data collection (pre-filter data)
+* configure exclusions and thresholds for event-detection  - optional
 * run the deploy/clean_install.sh script
 * the script will prompt for online/offline mode, and target type, as it executes
 * the installer will optionally build a new schema/template-set in the target :
@@ -189,12 +189,14 @@ Several steps are needed :
 
 Ideally do the installation as `root`
 
-#### Configuration (resources/collect/configuration/perfagent-collect.conf)
+***Configuration haproxy tokens (resources/collect/configuration/perfagent-collect.conf)***  
+
 Align the base index in this file with the index number of the 'HTTP/1.1' field in the haproxy.log files (usually either 17 or 19). Index starts at 0. For example with no captures in the haproxy.log we would have :
 
 `base_index	17`
 
-#### Configuration (resources/collect/configuration/perfagent_connection.info)
+***Configuration cluster access (resources/collect/configuration/perfagent_connection.info)*** 
+
 Set up the access url and credentials for the cluster.
 
 ```
@@ -204,9 +206,22 @@ admincredentials    bWlk********3MHJk
 * The clusterurl should be the vip of the cloudant local cluster.
 * The admin credentials shoud be a base64encoding of the string `user:password` where the user is a cluster admin user.  
 
-#### Postgres target : Configuration (resources/export/postgres/configuration/perfagent\_pg_db.info)
-Set up the hostname:db string for use by the postgres loading scripts.
-The expected format is postgreshost:db . The :  is important
+***Elasticsearch target : Configuration data export - step1 (resources/export/elasticsearch/configuration/perfagent\_es_connection.info)***
+
+```
+url		https://676610a3-f312-43aa-a4db-0b7040965ca5.68ea2cbd8c8d4c30b5b8450be6b8593a.databases.appdomain.cloud:31739	
+ssl		enabled
+certificate	/opt/cloudant-performancecollector/resources/export/elasticsearch/configuration/certificates/ca.pem
+credentials	aWJt***g==	
+```
+* The url should be the url of the elasticsearch target. Include http/https and port.
+* if ssl is enabled then the connection will match against the certificate value using TLS
+* The certificate identifies the CAcert file to be used in TLS verification
+* The access credentials shoud be a base64encoding of the string `user:password`   
+
+***Elasticsearch target : Configuration data export - step2 (resources/export/elasticsearch/configuration/certificates)***
+
+Place your certificate at this location. You must match it with the filename identified in step1 above.
 
 ```
 ldap.bkp.ibm.com:postgres    
@@ -215,7 +230,8 @@ ldap.bkp.ibm.com:postgres
 * The postgres database would be `postgres` (postgres is the default).  
 
 
-#### Postgres target : Configuration (resources/export/postgres/configuration/perfagent\_pg_credentials.info)
+***Postgres target : Configuration data export - step2 (resources/export/postgres/configuration/perfagent\_pg_credentials.info)*** 
+
 Set up the pguser:pgpassword as a base64 string for use by the postgres loading scripts. You can do this from the shell using 
 
 ```
@@ -228,17 +244,17 @@ $ echo cloudant:passw0rd | base64 > perfagent_pg_credentials.info
 `Y2xvdWRhbnQ6cGFzc3cwcmQK`
 
 
-#### Configuration of proxy Data Exclusions (perfagent\_stats\_exclusions.info)
+***Configuration of Data Exclusions (resources/collect/configuration/perfagent\_stats\_exclusions.info)***
 
 Proxy data is delineated by database that is accessed.
 
 Some data can be excluded from collection to avoid distorting 'avg' statistics or for other reasons.
 
-Data from defined clientips can be excluded eg data from backup clusters.
+*Data from ***defined clientips*** can be excluded eg data from backup clusters.*
 
 Use this file to define what you wish to ignore. See the configuration documentation for more details.
 
-#### Configuration of client Data Exclusions (clientdata\_stats\_exclusions.info)
+***Configuration of client Data Exclusions (resources/collect/configuration/clientdata\_stats\_exclusions.info)***
 
 Client data is delineated by clientip that is interacting with the cluster.
 
@@ -249,13 +265,13 @@ Per-client stats are useful in determining patterns of use by various REST clien
 Use this file to define what you wish to ignore. See the configuration documentation for more details.
 
 
-#### Configuration of haproxy Event Exclusions (perfagent\_events\_exclusions.info)
+***[Optional] Configuration of  Event Exclusions (perfagent\_events\_exclusions.info)***
 
 Some data can be excluded from event-sensing to avoid unwanted repeated events or other reasons. 
 
 Use this file to define what you wish to ignore. See the configuration documentation for more details.
 
-#### Configuration of haproxy Event Thresholds (perfagent\_events\_thresholds.info)
+***[Optional] Configuration of haproxy Event Thresholds (perfagent\_events\_thresholds.info)***
 
 Use this file to define what you wish to signal as the limit for eventing. See the configuration documentation for more details.
 
