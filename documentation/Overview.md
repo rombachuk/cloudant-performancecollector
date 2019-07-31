@@ -40,7 +40,6 @@ This allows the breakdown of traffic and performance response rates by database-
 Collection is supported for :  
   
 * per-database/verb/endpoint metrics using haproxy log sources (proxydata collector)
-* per-client/database/verb metrics using haproxy log sources (clientdata collector)
 * per-database/verb/endpoint/query-body metrics using haproxy log sources (bodydata collector)
 * per-client/database/verb metrics using haproxy log sources (clientdata collector)
 * per-host and per-type metrics using metricsdb database source available in Cloudant Local 1.1 (metricsdbdata collector)
@@ -81,8 +80,8 @@ Export is supported for:
 
 The companion opensource deliverable 'Cloudant Performance Collector Dashboards' is provided to provide a default set of dashboards which work with the exported data. 
 
-Grafana dashboards are available for : postgres, elasticsearch
-Kibana dashboards are available for : elasticsearch
+* Grafana dashboards are available for : postgres, elasticsearch 
+* Kibana dashboards are available for : elasticsearch
 
 
 ## Problem Detection with Threshold Conditions (proxydata only)
