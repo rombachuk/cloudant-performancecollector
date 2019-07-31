@@ -47,7 +47,7 @@ The admin credentials shoud be a base64encoding of the string user:password wher
 
 ### Export target access details (postgres)
 
-***for Postgres target : Configuration data export - step1 (resources/export/postgres/configuration/perfagent\_pg_db.info)
+***for Postgres target : Configuration data export - step1 (resources/export/postgres/configuration/perfagent\_pg_db.info)***
 
 Set up the hostname:db string for use by the postgres loading scripts.
 The expected format is postgreshost:db . The :  is important
