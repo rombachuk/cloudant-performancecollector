@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["client_verb*"],
+ "index_patterns" : ["couchdbstats_client_verb*"],
  "settings": {
  },
  "mappings": {

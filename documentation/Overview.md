@@ -3,7 +3,7 @@
 ## Release Information
 This document version is aligned with Release 30
 ## Document Purpose
-The purpose of this document is to provide a user guide for the cloudant-performancecollector tool, delivered as an open source tool. 
+The purpose of this document is to provide a user guide for the couchdb cloudant-performancecollector tool, delivered as an open source tool. 
 The tool is provided on an opensource basis, and users are free to enhance or modify the tool in any way. Such changes may of course modify the features, options, and descriptions provided in this document.
 
 ## Intended Audience 
@@ -14,28 +14,28 @@ The intended audience for this document are users who are deploying CouchDB clus
 
 #	Features Summary
 ##	Periodic Data Collection & Reporting  
-This feature allows data to be collected from sources on running clusters of :
+This feature allows metrics data to be collected from sources on running clusters of :
 
 * CouchDB 2.+ with haproxy deployed as a load-balancer
 * Cloudant Local Edition 1.1 which includes CouchDB 2.0
 
-and exported to :
+and exported to one of, or both of :
 
 * postgres database
 * elasticsearch database
 
-Companion dashboards are available to visualise the data collected.
+Companion dashboards (using Grafana and/or Kibana) are available to visualise the data collected.
 
 ###	Collection 
 
-Each row collected is stamped with the cluster-id so data from several clusters can be captured to the same  data source.
+Each row collected is stamped with the cluster-id so data from several clusters can be exported to the same  data source, and allows the performance of different clusters to be evaluated independently or compared.
 
-This feature provides statistics at a finer scope than available from :
+This deliverable provides statistics at a finer scope than available from :
 
-* Cloudant Local 1.1 metrics dashboard which is limited to dbnode or whole-cluster
+* Cloudant Local 1.1 metrics dashboard, which is limited to aggregations at dbnode-level or at whole-cluster
 * CouchDB futon dashboard
 
-This allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster, or be distributed across several clusters. 
+It allows the breakdown of traffic and performance response rates by database-sets, which may reflect different users/projects/tasks sharing the same cluster, or be distributed across several clusters. 
   
 Collection is supported for :  
   
@@ -49,7 +49,7 @@ Collection frequency is controlled by cron :
   
 * haproxy,client and metricsdb sourced data are collected every minute.  
 * cluster volume metrics are best collected every day (or potentially per hour for lowcount clusters (100-200 dbs+views))
-* bodydata metrics are recommended for one-shot collection only, not continuous schemes, as they generate a large number of terms
+* bodydata metrics are recommended for one-shot collection only, not continuous schemes, as they generate a large number of terms. Bodydata metrics can be processed for per-minute or per-second granularity.
 
 Aggregation processing is :
 
@@ -81,6 +81,7 @@ Export is supported for:
 The companion opensource deliverable 'Cloudant Performance Collector Dashboards' is provided to provide a default set of dashboards which work with the exported data. 
 
 * Grafana dashboards are available for : postgres, elasticsearch 
+
 * Kibana dashboards are available for : elasticsearch
 
 
@@ -130,7 +131,7 @@ Consult the **Investigation using Cron** documentation for further information.
 
 ## Investigation using API 
 
-This feature is supported for proxydata.
+This feature is supported for proxydata, and requires installation and operation of the cloudant-specialapi tool which is also available from this github user site.
 
 This feature is intended to allow detailed one-time collections using an api call :  
 

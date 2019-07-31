@@ -60,7 +60,7 @@ def execute_exportvolume(url,username,password,ssl,cert,fromtime,resultslocation
             datatype = 'db'
            elif filename.startswith('view'):
             datatype = 'view'
-           index = 'couchdbvolume_'+datatype+'_'+today_string
+           index = 'couchdbstats_couchdbvolume_'+datatype+'_'+today_string
            filedocs=[]
            ef = open(resultslocation+'/'+filename,'r')
            eflines = ef.readlines()

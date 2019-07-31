@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["couchdbnode_host*"],
+ "index_patterns" : ["couchdbstats_couchdbnode_host*"],
  "settings": {
  },
  "mappings": {

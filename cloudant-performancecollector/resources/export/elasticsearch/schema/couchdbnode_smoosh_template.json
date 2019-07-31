@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["couchdbnode_smoosh*"],
+ "index_patterns" : ["couchdbstats_couchdbnode_smoosh*"],
  "settings": {
  },
  "mappings": {

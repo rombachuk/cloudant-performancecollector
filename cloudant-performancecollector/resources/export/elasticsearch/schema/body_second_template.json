@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["body_second*"],
+ "index_patterns" : ["couchdbstats_body_second*"],
  "settings": {
  },
  "mappings": {

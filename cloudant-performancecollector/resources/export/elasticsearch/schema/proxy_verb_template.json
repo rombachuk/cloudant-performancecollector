@@ -1,5 +1,5 @@
 {
- "index_patterns" : ["proxy_verb*"],
+ "index_patterns" : ["couchdbstats_proxy_verb*"],
  "settings": {
  },
  "mappings": {
