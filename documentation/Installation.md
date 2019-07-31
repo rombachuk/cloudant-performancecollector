@@ -86,9 +86,10 @@ The install has several pre-requisites:
 * for postgres export target : install and configuration of postgres client on the server you are installing the collector
 * configuration of respective haproxy with http logging
 
-### Load Balancer haproxy configuration
+#### Load Balancer haproxy configuration
 
-####	Number of logline tokens (fields)
+***Number of logline tokens (fields)*** 
+
 The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
 
 The standard haproxy configuration for Cloudant clusters does not include capture lines. This means the number of tokens per logfile line is 17.
@@ -118,28 +119,6 @@ The diagram above highlights the key configuration steps in the installation
 * once the pipeline is tested, continuous operation is configured using cron
 
 
-## Performancecollector Install
-
-### Postgres Target Only - Installation of Postgres Client
-
-The standard postgres client for the operating system should be installed on each performancecollector server (load-balancer). There is no need to install postgresql-server.
-
-For RHEL7 or Centos7, this can be achieved with 'yum install postgresql'
-
-Once installed, test login to the postgres server is possible as linux user `root` using your postgres  pg-user an dpg-database using the `psql` tool :
-
-  ```
-  $ psql -U pg-user -d pg-database -h postgres-host
-  psql> 
-  ```  
-  where postgres-host is the name of the postgres server. 
-
-
-### Python libraries
-
-The following library should be installed on each performancecollector server (load-balancer), as `root`   
-
-`$ pip install pandas`
 
 ### Collecting software from Github
 
@@ -151,6 +130,7 @@ The github repository is
 The releases option in Github shows the available releases.
 Download from the site in either tar.gz or zip format, and place in a suitable directory, as `root` on the server eg `/root/software`
 
+For `Offline` installations (no internet connection), you should also download the `wheelhouse.tar.gz` component of the release and place it in the same directory.
 
 ### 	Unpacking 
 Then unpack the software with `tar xvf` or `unzip`, depending on the download format from github.
@@ -161,6 +141,10 @@ The software unpacks to the following directories :
   * documentation (markdown files documenting the package)
   * test (testing scripts for the package)
   * deploy (installation & patch scripts for the package)
+  * offline (container directory for wheelhouse tar required in offline installs)
+  
+For `Offline` installations, copy or move the downloaded `wheelhouse.tar.gz` into the `offline` directory.
+
 
 #### Example
 
@@ -190,15 +174,20 @@ Several steps are needed :
 * configure exclusions for data collection (proxydata and clientdata)
 * configure exclusions and thresholds for event-detection (proxydata only) - optional
 * run the deploy/clean_install.sh script
-* the installer will optionally build a new schema/template-set in the target :  
--- do this only on the first load-balancer install  
--- backup any old performance data you need
+* the script will prompt for online/offline mode, and target type, as it executes
+* the installer will optionally build a new schema/template-set in the target :
+
+-- do this only once for this target  
+*(ie ignore for 2nd load balancer, and subsequent clusters exporting to this same target)* 
+
+-- backup any old performance data you need 
+
 * configure crontab to run periodic metric collection jobs
 * grafana hub: install datasources and dashboards into grafana
 * kibana hub: install index into kibana
 
 
-Do the installation as `root`
+Ideally do the installation as `root`
 
 #### Configuration (resources/collect/configuration/perfagent-collect.conf)
 Align the base index in this file with the index number of the 'HTTP/1.1' field in the haproxy.log files (usually either 17 or 19). Index starts at 0. For example with no captures in the haproxy.log we would have :
