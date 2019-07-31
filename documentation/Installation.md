@@ -1,25 +1,28 @@
 # Installing the performancecollector
 
-### Planning your deployment
+## Planning your deployment
+
+### Architecture
 
 [architecture]: pc1.jpg
 
 ![architecture]
  
-The overall architecture for performancecollector has :  
+The overall architecture for operating the performancecollector on a cluster has :  
 
-*	each load-balancer feeds haproxy log file with latest proxy data
-*       each cluster provides volume data via \_all\_dbs endpoint of the cluster
-*       cloudant-local clusters provide a metricsdb which consolidate per-minute stats data from each dbnode
+*	each load-balancer haproxy process activity to a haproxy.log file
+* each cluster provides volume data via \_all\_dbs endpoint of the cluster
+* cloudant-local clusters provide a metricsdb which consolidate per-minute stats data from each dbnode
 *	processing of [proxy],[client],[body],[metricsdb] and [volume] data into metrics by the performancecollector
-*       export of metrics to a target database (postgres or elasticsearch)
-*	grafana-server and/or kibana-server and connects to postgres or elasticsearch datasource. 
-*       user runs grafana dashboard on his browser which presents data from the datasource
+* export of metrics to a target database (postgres or elasticsearch)
+*	grafana-server and/or kibana-server and connects to export target datasource(s). 
+* user runs grafana/kibana dashboard on his browser which presents data from the datasource(s)
 
+The performancecollector can be operated for a single node cluster. Typically, in these cases, haproxy is run on the same host ascouchdb/cloudant.
 
-The performancecollector is most conveniently installed on the one/two load balancers of a couchdb/cloudant-local cluster
 The performancecollector is designed for use in RHEL7 or Centos7 hosted environments. 
  
+The performancecollector is most conveniently installed on the one/two load balancers of a couchdb/cloudant-local cluster
 This removes the overhead of forwarding latest proxy data to another server. This can be done if it is not possible to export directly to the database target from the load-balancer nodes.
 
 The performancecollector causes bursts of high cpu usage on one core for about 10-20 seconds per minute if REST volumes are high, and this overhead must be accounted for in loadbalancer dimensioning.   
@@ -29,51 +32,93 @@ If dedicating a core on load-balancer servers to the performance collection is n
 * the performancecollector should be installed on a distinct server
 * haproxy.log files can be copied to these servers from load-balancers  
 
-
 The performancecollector on each load-balancer exports its results to a database:  
 *  Data is blank for the standby load-balancer. 
 *  On a switchover, the new active load-balancer will process data and data rows will appear.
+*  Dashboards aggregate data from both load-balancers for a given switchover minute.
 *  Volume & metricsdb data must be enabled on only one load-balancer. This type of collection should connect to the vip of the cluster to switch to the active load-balancer. If the load-balancer host fails entirely, then this data will not be available. The alternative is to run this collection from an independent node.
 
-### Key Steps
-Overall operation is summarised as :  
+You will need to install the performancecollector on each of the clusters you wish to collect and export data for. All data is stamped with a clusterid, so it is safe to export data from several clusters to a common export target.
 
-* performancecollector computes metrics from file and database sources and exports the results into a database.
-* cloudant-performancedashboards content is used on **Grafana/Kibana**  to display the results from the  datasource.
+### Checklist
 
-The install requires several steps: 
+Ensure you have identified (and installed) :  
+
+* server(s) you will install performancecollector (most commonly this will be the 2 load-balancers of a cluster)
+* couchdb cluster endpoint (source of non-haproxy.log data)
+* cluster type: couchdb/cloudant-local (metricsdbdata can only be enabled for Cloudant Local type couchdb clusters)
+* export target database: postgres/elasticsearch 
+* dashboard hub: grafana/kibana 
+* connection details for cluster, export-target, and dashboard-hub
+* location of haproxy.log files
+* haproxy http log format (from haproxy.cfg)
+
+
+## Install
+
+### Overview
+
+The install should be executed once all pre-requisites are complete, and connection information is available.
+
+The install process involves installing a python module on a Linux server. This module is installed in a virtual enviroment, and is independent of the server's python global package space.
+
+The install process backs up any previous running release to a backup directory tree, so previous setups are available for review.
+
+The install script allows the configuration of setup data in a staging area, prior to the actual install execution. This can be adjusted afterwards, if necessary.
+
+The install script allows the `postgres schema` or `elasticsearch templates` to be loaded to the configured export target. This should be activated only once for the first cluster exporting to this target. For subsequent clusters exporting to same target, ignore this option.
+
+Offline and Online modes are supported. The mode is selected during the install. 
+For servers isolated from the internet and the PyPI online repository, choose Offline. You will need to download the `wheelhouse.tar.gz` component of this release, and site it in the `offline` directory of the staging area.
+
+The performancecollector is most conveniently installed and run as `root`, since haproxy is normally run as `root`
+
+For postgres, ensure that the installation user on the performancecollector host can access the PG instance via the psql client. Export is executed using psql commands from the linux shell.
+
+The installation may operate successfully as other linux users. Ensure access to haproxy.log is available to the user.
+
+### Pre-Requisites
+
+The install has several pre-requisites: 
   
-* install and configuration of a target database (postgres or elasticsearch) on a server
+* install and configuration of a export target database (postgres or elasticsearch) on a server
 * install and configuration of dashboarding-hub (grafana or kibana) on a server
-* for postgres export target : install and configuration of postgres client on load-balancers
-* configuration of haproxy to support http-log format for scraping by collector
-* install and configuration of performancecollector on load-balancers, including the periodic collection schedule via cron
+* for postgres export target : install and configuration of postgres client on the server you are installing the collector
+* configuration of respective haproxy with http logging
+
+### Load Balancer haproxy configuration
+
+####	Number of logline tokens (fields)
+The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
+
+The standard haproxy configuration for Cloudant clusters does not include capture lines. This means the number of tokens per logfile line is 17.
+
+If auditing is in place, then additional capture lines may appear. An example of capture lines for auditing is 
+  
+```
+  capture request header Authorization len 256    
+  capture cookie AuthSession= len 256  
+```
+The number of tokens is increased by the number of additional captures. So the haproxy.log will have 19 tokens in the above example. This number must be synchronised in a config file in the collector (see configuration).
 
 
+### Configuration Key Steps
 
-## Target Database
+[keysteps]: pc2.jpg
 
-The target database must be operational prior to installation.
+![keysteps]
 
-### PostgreSQL
+The diagram above highlights the key configuration steps in the installation
+* configuration of haproxy log file location (step 1)
+* configuration of location of haproxy log fields (aligning with haproxy.cfg settings) (step 2)
+* configuration of exclusions (filters) for collection & eventing (step 3)
+* configuration of cluster connection details (step 4)
+* configuration of export-target connection details (step 5)
+* configuration of datasources on dashboard-hub (optionally configure grafana connection details) (step 6)
+* once the pipeline is tested, continuous operation is configured using cron
 
-For postgres, ensure that the 'root' user on the performancecollector host can access the PG instance via the psql client. Export is executed using psql commands from the linux shell. Ensure the connection details are configured in the resources/export/postgres/configuration directory during the installation. The instance can be initialised with the necessary schema during installation if the connection details are available.
+Ensure the connection details are configured in the resources/export/postgres/configuration directory during the installation. The instance can be initialised with the necessary schema during installation if the connection details are available.
 
-### Elasticsearch
-
-For elasticsearch, access is made using the python 'elasticsearch' driver. Ensure that the connection details are configured in the resources/export/elasticsearch/configuration directory during the installation. The instance can be initialised with the necessary templates for indexes during installation if the connection details are available.
-
-
-
-## Dashboarding Hub
-
-Grafana is preferable for this set of data. Kibana offers poorer hover-over data. Grafana can connect to elasticsearch perfectly well.
-
-### Grafana
-
-Install grafana on a server. The `cloudant-performancecollector` and `cloudant-performancedashboards` are designed to work with Grafana 5 or later.
-
-Standard Grafana installation procedures can be used.
 
 #### PostgreSQL database 
 
@@ -101,20 +146,6 @@ Unpack the zip or pull individual <dashboard>.json files.
 Then import the json files via grafana home page. Follow instructions on the cloudant-performancedashboards site for selection of datasources for imported dashbaords.
 
 
-## Load Balancer haproxy configuration
-
-####	Number of logline tokens (fields)
-The /etc/haproxy/haproxy.cfg is used to define the log format of the haproxy.log file, and the number of fields.  
-
-The standard haproxy configuration for Cloudant clusters does not include capture lines. This means the number of tokens per logfile line is 17.
-
-If auditing is in place, then additional capture lines may appear. An example of capture lines for auditing is 
-  
-```
-  capture request header Authorization len 256    
-  capture cookie AuthSession= len 256  
-```
-The number of tokens is increased by the number of additional captures. So the haproxy.log will have 19 tokens in the above example. This number must be synchronised in a config file in the collector (see configuration).
 
 
 ## Performancecollector Install
