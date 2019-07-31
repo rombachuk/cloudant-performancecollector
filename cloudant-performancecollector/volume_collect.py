@@ -42,6 +42,7 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
     data = alldbs_response.json()
     index = 0
     for db in data:
+      db=db.replace('/','%2F')
       db_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db),2,None)
       shards_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_shards',2,None)
       if db_response is not None:
@@ -57,6 +58,7 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
       index = index+1
     vindex = 0
     for db in data:
+      db=db.replace('/','%2F')
       dbviews_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_all_docs?start_key="_design"&end_key="_design0"',2,None)
       shards_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_shards',2,None)
       if dbviews_response is not None:

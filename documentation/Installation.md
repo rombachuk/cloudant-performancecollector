@@ -147,18 +147,19 @@ For `Offline` installations, copy or move the downloaded `wheelhouse.tar.gz` int
 
 ***Example***
 
-Software release 27.0.3 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-27.0.2.tar.gz` and unpacked with tar as  
+Software release 30.0.0 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-30.0.0.zip` and unpacked with unzip as  
   
   
 ```  
-[root@cl11c74lb1 cloudant-performancecollector-27.0.3]# pwd
-/root/software/cloudant-performancecollector-27.0.3
-[root@cl11c74lb1 cloudant-performancecollector-27.0.3]# ls -l
+[root@pbackup cloudant-performancecollector-30.0.0]# pwd
+/root/software/cloudant-performancecollector-30.0.0
+[root@pbackup cloudant-performancecollector-30.0.0]# ls -l
 total 8
-drwxrwxr-x 4 root root 4096 Sep 14 11:53 cloudant-performancecollector
-drwxrwxr-x 2 root root   54 Sep 14 11:53 deploy
-drwxrwxr-x 2 root root  127 Sep 14 11:53 documentation
--rw-rw-r-- 1 root root  155 Sep 14 11:53 README.md
+drwxr-xr-x. 5 root root 4096 Jul 31 13:12 cloudant-performancecollector
+drwxr-xr-x. 2 root root   54 Jul 31 13:12 deploy
+drwxr-xr-x. 2 root root  265 Jul 31 13:12 documentation
+drwxr-xr-x. 2 root root   44 Jul 31 13:28 offline
+-rw-r--r--. 1 root root  155 Jul 31 13:12 README.md
 ```    
 
 ### Clean Install
