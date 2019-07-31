@@ -145,8 +145,7 @@ The software unpacks to the following directories :
   
 For `Offline` installations, copy or move the downloaded `wheelhouse.tar.gz` into the `offline` directory.
 
-
-#### Example
+***Example***
 
 Software release 27.0.3 is downloaded to server cl11c74lb1 directory  `/root/software/cloudant-performancecollector-27.0.2.tar.gz` and unpacked with tar as  
   
@@ -169,25 +168,25 @@ Several steps are needed :
   
 * configure haproxy token setup 
 * configure cluster access
-* postgres target: configure export target 
-* es target: configure export target
+* if postgres target: configure export target 
+* if elasticsearch target: configure export target
 * configure exclusions for data collection (pre-filter data)
 * configure exclusions and thresholds for event-detection  - optional
 * run the deploy/clean_install.sh script
 * the script will prompt for online/offline mode, and target type, as it executes
-* the installer will optionally build a new schema/template-set in the target :
-
--- do this only once for this target  
+* the installer will optionally build a new schema/template-set in the target :  
+-- do this only once for this target and backup any existing data at the target that you need 
 *(ie ignore for 2nd load balancer, and subsequent clusters exporting to this same target)* 
-
--- backup any old performance data you need 
 
 * configure crontab to run periodic metric collection jobs
 * grafana hub: install datasources and dashboards into grafana
 * kibana hub: install index into kibana
 
 
-Ideally do the installation as `root`
+You should edit the files within the `unpacking` (or staging) area, prior to executing the clean_install script.
+
+For example, if you have unpacked release `cloudant-performancecollector-30.0.0`to the directory `/root/software/cloudant-performancecollector-30.0.0`, then edit the files you have unpacked within directory `/root/software/cloudant-performancecollector-30.0.0/cloudant-performancecollector`
+
 
 ***Configuration haproxy tokens (resources/collect/configuration/perfagent-collect.conf)***  
 
@@ -209,7 +208,7 @@ admincredentials    bWlk********3MHJk
 ***Elasticsearch target : Configuration data export - step1 (resources/export/elasticsearch/configuration/perfagent\_es_connection.info)***
 
 ```
-url		https://676610a3-f312-43aa-a4db-0b7040965ca5.68ea2cbd8c8d4c30b5b8450be6b8593a.databases.appdomain.cloud:31739	
+url		https://my_es_host.databases.appdomain.cloud:31739	
 ssl		enabled
 certificate	/opt/cloudant-performancecollector/resources/export/elasticsearch/configuration/certificates/ca.pem
 credentials	aWJt***g==	
@@ -219,16 +218,16 @@ credentials	aWJt***g==
 * The certificate identifies the CAcert file to be used in TLS verification
 * The access credentials shoud be a base64encoding of the string `user:password`   
 
-***Elasticsearch target : Configuration data export - step2 (resources/export/elasticsearch/configuration/certificates)***
-
-Place your certificate at this location. You must match it with the filename identified in step1 above.
+You can do generate the `credentials` string from the command prompt eg
 
 ```
-ldap.bkp.ibm.com:postgres    
+[root@cl11c74lb1 configuration]# echo cloudant:passw0rd | base64
+Y2xvdWRhbnQ6cGFzc3cwcmQK 
 ```   
-* The postgres host would be `ldap.bkp.ibm.com`.
-* The postgres database would be `postgres` (postgres is the default).  
 
+***Elasticsearch target : Configuration data export - step2 (resources/export/elasticsearch/configuration/certificates)***
+
+Place your CAcert certificate at this location. You must match it with the filename identified in step1 above. 
 
 ***Postgres target : Configuration data export - step2 (resources/export/postgres/configuration/perfagent\_pg_credentials.info)*** 
 
@@ -276,17 +275,23 @@ Use this file to define what you wish to ignore. See the configuration documenta
 Use this file to define what you wish to signal as the limit for eventing. See the configuration documentation for more details.
 
 
-#### Executing Installation
+***Executing Installation***
 
-Once the configuration steps are done, go to `deploy` directory, and run `./clean_install.sh` 
+Once the configuration editing steps are done, go to `deploy` directory, and run `./clean_install.sh` 
+
+Follow the prompts:  
+
+* select mode(offline or not)
+* target (es or pg) and whether to initialise schema or templates
   
 This script will :  
 
-* create a new installation in `/opt/cloudant-performancecollector` using the files contained in the staging area `cloudant-performancecollector` directory
+* create a new installation in `/opt/cloudant-performancecollector` using the files contained in the `unpacking` area 
 * backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the new installation
 * create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
 
+The cpc_api_processor service in only needed for api based investigations.
 
 #### Crontab configuration
 Once the software is newly deployed, then the `root` user cron must be configured for periodic operation. It is recommended that :  
@@ -303,7 +308,7 @@ ES target: The file `resources/export/elasticsearch/templates/crontab.example` p
 
 #### Configuring Grafana
 
-#### Configuring PostgreSQL datasource (PostgreSQL export)
+***Configuring PostgreSQL datasource (for PostgreSQL export)***
 
 For postgres export target, set up manually
 
@@ -318,12 +323,39 @@ g.	name = cloudantstats
 ```
 Save & **test**.
 
-#### Configuring Elasticsearch datasource (Elasticsearch export)
+***Configuring Elasticsearch datasources (for Elasticsearch export)***
 
-For elasticsearch export target, 10 datasources are needed, and it is convenient to use the helper script  `resources/export/elasticsearch/grafana/datasources_install.sh` after you have installed the performancecollector.
+For elasticsearch export target, 10 datasources are needed, and it is convenient to use the helper script  `datasources_install.sh` after you have installed the performancecollector.
+
 This requires you to to be able to connect to Grafana from your load-balancer. This script also loads user and certificate data into the datasource, so saves a lot of time.
 
-#### Loading the dashboards
+The script requires to login to grafana, so you need to set up connection details. It must be possible to access to curl to the grafana endpoint for the script to worl
+
+* Configure grafana connection info 
+(/opt/cloudant-performancecollector/resources/export/elasticsearch/grafana/grafana_connection.info)*
+
+```
+url		https://ldap.bkp.ibm.com:3000
+credentials	YWRtaW46YWRtaW4K
+```
+* The url should be the url of the elasticsearch target. Include http/https and port.
+* The access credentials shoud be a base64encoding of the string `user:password`   
+
+https is supported, but certificate checking is not enabled.
+
+You can generate the `credentials` string from the command prompt eg
+
+```
+[root@cl11c74lb1 configuration]# echo cloudant:passw0rd | base64
+Y2xvdWRhbnQ6cGFzc3cwcmQK 
+```   
+
+* Run datasources installer
+(/opt/cloudant-performancecollector/resources/export/elasticsearch/grafana/datasources_install.sh)*
+
+Run this as `root`.
+
+***Loading the dashboards***
 
 Download the latest dashboards for your target from github to a pc or mac from `https://github.com/rombachuk/cloudant-performancedashboards`.   
 Unpack the zip or pull individual <dashboard>.json files.
