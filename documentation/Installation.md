@@ -117,36 +117,6 @@ The diagram above highlights the key configuration steps in the installation
 * configuration of datasources on dashboard-hub (optionally configure grafana connection details) (step 6)
 * once the pipeline is tested, continuous operation is configured using cron
 
-Ensure the connection details are configured in the resources/export/postgres/configuration directory during the installation. The instance can be initialised with the necessary schema during installation if the connection details are available.
-
-
-#### PostgreSQL database 
-
-For postgres export target, set up manually
-
-```
-a.	type = PostgreSQL
-b.	host = postgreshost:5432
-c.	database = postgres
-d.	user = cloudant
-e.	password = default is cloudant
-f.	SSL mode = disable
-g.	name = cloudantstats
-```
-Save & **test**.
-
-#### Elasticsearch database 
-For elasticsearch export target, 10 datasources are needed, and it is convenient to use the helper script resources/export/elasticsearch/grafana/datasources_install.sh after you have installed the performancecollector.
-This requires you to to be able to connect to Grafana from your load-balancer. This script also loads user and certificate data into the datasource, so saves a lot of time.
-
-#### Loading the dashboards
-Download the latest dashboards for your target from github to a pc or mac from `https://github.com/rombachuk/cloudant-performancedashboards`.   
-Unpack the zip or pull individual <dashboard>.json files.
-
-Then import the json files via grafana home page. Follow instructions on the cloudant-performancedashboards site for selection of datasources for imported dashbaords.
-
-
-
 
 ## Performancecollector Install
 
@@ -224,7 +194,7 @@ Several steps are needed :
 -- do this only on the first load-balancer install  
 -- backup any old performance data you need
 * configure crontab to run periodic metric collection jobs
-* grafana hub: install datasources into grafana
+* grafana hub: install datasources and dashboards into grafana
 * kibana hub: install index into kibana
 
 
@@ -301,16 +271,17 @@ Use this file to define what you wish to ignore. See the configuration documenta
 Use this file to define what you wish to signal as the limit for eventing. See the configuration documentation for more details.
 
 
-#### Installation
+#### Executing Installation
 
 Once the configuration steps are done, go to `deploy` directory, and run `./clean_install.sh` 
   
 This script will :  
 
-* create a new installation in `/opt/cloudant-performancecollector` using the `conf` and `info` files contained in the installer's `cloudant-performancecollector` directory
+* create a new installation in `/opt/cloudant-performancecollector` using the files contained in the staging area `cloudant-performancecollector` directory
 * backup any pre-existing `/opt/cloudant-performancecollector` content to a new directory `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm` where YYYYMMDDHHmm is the datetime of run of the install. You can delete this backup once you are happy with the running of the new installation
 * create new service files in `/etc/init.d` and start them : services are created called `cpc_api_processor`
 * backup any pre-existing service files in `/etc/init.d` for those services within `opt/cloudant-performancecollector-bkp-YYYYMMDDHHmm/init.d`. You can delete this backup once you are happy with the running of the new installation
+
 
 #### Crontab configuration
 Once the software is newly deployed, then the `root` user cron must be configured for periodic operation. It is recommended that :  
@@ -324,6 +295,35 @@ Once the software is newly deployed, then the `root` user cron must be configure
 Postgres target: The file `resources/export/postgres/templates/crontab.example` provides a template. Remember to only enable metrics and volumedb on ONE load balancer. Comment out or delete the lines one of the lbs.
 
 ES target: The file `resources/export/elasticsearch/templates/crontab.example` provides a template. Remember to only enable metrics and volumedb on ONE load balancer. Comment out or delete the lines one of the lbs.
+
+#### Configuring Grafana
+
+#### Configuring PostgreSQL datasource (PostgreSQL export)
+
+For postgres export target, set up manually
+
+```
+a.	type = PostgreSQL
+b.	host = postgreshost:5432
+c.	database = postgres
+d.	user = cloudant
+e.	password = default is cloudant
+f.	SSL mode = disable
+g.	name = cloudantstats
+```
+Save & **test**.
+
+#### Configuring Elasticsearch datasource (Elasticsearch export)
+
+For elasticsearch export target, 10 datasources are needed, and it is convenient to use the helper script  `resources/export/elasticsearch/grafana/datasources_install.sh` after you have installed the performancecollector.
+This requires you to to be able to connect to Grafana from your load-balancer. This script also loads user and certificate data into the datasource, so saves a lot of time.
+
+#### Loading the dashboards
+
+Download the latest dashboards for your target from github to a pc or mac from `https://github.com/rombachuk/cloudant-performancedashboards`.   
+Unpack the zip or pull individual <dashboard>.json files.
+
+Then import the json files via grafana home page. Follow instructions on the cloudant-performancedashboards site for selection of datasources for imported dashbaords.
 
 
 ### Patch Install
