@@ -3,7 +3,6 @@
  "settings": {
  },
  "mappings": {
-  "_doc" : {
   "properties" : {
     "cluster" : { "type" : "keyword" },
     "database" : { "type" : "keyword" },
@@ -13,6 +12,5 @@
    { "count_as_integers": { "match_mapping_type": "string", "match": "count_*", "mapping": { "type": "integer" }}},
    { "size_as_floats": { "match_mapping_type": "string", "match": "size_*", "mapping": { "type": "float" }}}
   ]
- }
  }
 }

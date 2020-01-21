@@ -3,7 +3,6 @@
  "settings": {
  },
  "mappings": {
-  "_doc" : {
   "properties" : {
     "cluster" : { "type" : "keyword" },
     "host" : { "type" : "keyword" },
@@ -14,6 +13,5 @@
    { "ioql_as_floats": { "match_mapping_type": "string", "match": "*_ioq_latency", "mapping": { "type": "float" }}},
    { "pctl_as_floats": { "match_mapping_type": "string", "match": "percentile_*", "mapping": { "type": "float" }}}
   ]
- }
  }
 }
