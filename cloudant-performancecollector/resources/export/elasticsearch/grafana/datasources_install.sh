@@ -49,6 +49,8 @@ curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POS
 eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json8'"
 eval $curlcmd
+curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json9'"
+eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json10'"
 eval $curlcmd
 curlcmd="/usr/bin/curl -k --connect-timeout 60  -s -u "$gruser":"$grpass" -X POST "$grurl"/api/datasources -H 'Content-Type:application/json' -d '$json11'"
