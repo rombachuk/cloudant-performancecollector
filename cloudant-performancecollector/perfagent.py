@@ -23,10 +23,12 @@ def process_timeperiod(fromtime,totime):
     
 
 try:    
-  requests.urllib3.disable_warnings()
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
 except:
   try:
-    requests.packages.urllib3.disable_warnings()
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
   except:
     logging.warn("{cloudant performance agent} Unable to disable urllib3 warnings")
     pass

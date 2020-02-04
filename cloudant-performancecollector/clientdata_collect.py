@@ -115,10 +115,12 @@ def execute_client_collect(scope,s_url,s_credentials,s_username,s_password,p_url
 
 
 try:    
-  requests.urllib3.disable_warnings()
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
 except:
   try:
-    requests.packages.urllib3.disable_warnings()
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
   except:
     logging.warn("{cloudant client data collector} Unable to disable urllib3 warnings")
     pass

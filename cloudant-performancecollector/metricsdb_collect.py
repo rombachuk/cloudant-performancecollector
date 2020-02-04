@@ -124,10 +124,12 @@ logging.basicConfig(filename = logfilename, level=logging.WARN,
                     )
 
 try:    
-  requests.urllib3.disable_warnings()
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+  requests.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
 except:
   try:
-    requests.packages.urllib3.disable_warnings()
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
   except:
     logging.warn("{Cloudant hostdata (from metricsdb) performance worker} Unable to disable urllib3 warnings")
     pass
