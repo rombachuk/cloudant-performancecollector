@@ -1,0 +1,5 @@
+* * * * * /opt/cloudant-performancecollector/resources/export/postgres/scripts/continuous/proxydata_every_minute.sh verb 2 1 > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/resources/export/postgres/scripts/continuous/clientdata_every_minute.sh verb 2 1 > /dev/null 2>&1
+#* * * * * /opt/cloudant-performancecollector/resources/export/postgres/scripts/continuous/proxydata_every_minute.sh endpoint 2 1 > /dev/null 2>&1
+* * * * * /opt/cloudant-performancecollector/resources/export/postgres/scripts/continuous/metricsdbdata_every_minute.sh > /dev/null 2>&1
+30 11 * * * /opt/cloudant-performancecollector/resources/export/postgres/scripts/continuous/volumedata_every_day.sh > /dev/null 2>&1
