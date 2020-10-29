@@ -37,24 +37,34 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
   log_entry(results_location,viewfile,viewcolumns)
   alldbs_response = api_utils.get_with_retries(sess,clusterurl+'/_all_dbs',2,None)
   if alldbs_response is None:
+    logging.warn('cloudant volume collector:  all dbs list: collection failed')
     return None
   else:
     data = alldbs_response.json()
+    if '_replicator' not in data:
+        logging.warn('cloudant volume collector:  all dbs list: collection failed')
+        return None
+    logging.warn('cloudant volume collector:  all dbs list [{}]: collection success'.format(str(len(data))))
     index = 0
     for db in data:
       db=db.replace('/','%2F')
       db_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db),2,None)
       shards_response = api_utils.get_with_retries(sess,clusterurl+'/'+str(db)+'/_shards',2,None)
+       
       if db_response is not None:
-       dbdata = db_response.json()
-       shardcount = 0
-       if shards_response is not None:
-         shardsdata = shards_response.json()
-         if 'shards' in shardsdata:
-           shardcount = len(shardsdata['shards'])
-       dbstring = str(index)+','+str(clusterurl)+','+str(db)+','+str(mtime)+','+str(mtime_epoch)+','+str(dbdata['doc_count'])+','+\
-       str(dbdata['doc_del_count'])+','+str(dbdata['disk_size'])+','+str(dbdata['data_size'])+','+str(shardcount)
-       log_entry(results_location,dbfile,dbstring)
+        dbdata = db_response.json()
+        if 'doc_count' not in dbdata:
+           logging.warn('cloudant volume collector:  db [{}] : Error : collection failed'.format(db))
+        else:
+            logging.warn('cloudant volume collector:  db [{}] : collection success'.format(db))
+            shardcount = 0
+            if shards_response is not None:
+                shardsdata = shards_response.json()
+                if 'shards' in shardsdata:
+                    shardcount = len(shardsdata['shards'])
+            dbstring = str(index)+','+str(clusterurl)+','+str(db)+','+str(mtime)+','+str(mtime_epoch)+','+str(dbdata['doc_count'])+','+\
+            str(dbdata['doc_del_count'])+','+str(dbdata['disk_size'])+','+str(dbdata['data_size'])+','+str(shardcount)
+            log_entry(results_location,dbfile,dbstring)
       index = index+1
     vindex = 0
     for db in data:
@@ -74,6 +84,7 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
            if view_response is not None:
               viewdata = view_response.json()
               if 'view_index' in viewdata:
+               logging.warn('cloudant volume collector:  db [{}] view [{}]: collection success'.format(db,str(view['id'])))
                viewindex = viewdata['view_index']
                viewstring = str(vindex)+','+str(clusterurl)+','+str(db)+','+str(view['id'])+','+str(viewdata['name'])+','+str(viewindex['signature'])+','+\
                str(mtime)+','+str(mtime_epoch)+','+\
@@ -84,7 +95,7 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
 
     return True
  except Exception as e:
-  logging.warn('{Cloudant volume performancecollector} Error : '+str(e))
+  logging.warn('cloudant volume collector:  Error : '+str(e))
   return False
  
 defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
@@ -101,7 +112,7 @@ except:
     requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
     requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
   except:
-    logging.warn("{cloudant volume performancecollector worker} Unable to disable urllib3 warnings")
+    logging.warn("cloudant volume collector: Error: Unable to disable urllib3 warnings")
     pass
 
 
