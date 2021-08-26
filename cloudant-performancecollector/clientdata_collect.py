@@ -26,14 +26,14 @@ def get_client_groupcriteria(granularity,scope):
          groupcriteria = ['cluster','loghost','client','verb','endpoint']
        elif scope == 'verb' :
          groupcriteria = ['cluster','loghost','client','verb']
-       elif scope == 'database' :
+       elif scope == 'client' :
          groupcriteria = ['cluster','loghost','client']
       else:
        if scope == 'endpoint' :
          groupcriteria = ['cluster','loghost','client','verb','endpoint','mtime','mtime_epoch']
        elif scope == 'verb' :
          groupcriteria = ['cluster','loghost','client','verb','mtime','mtime_epoch']
-       elif scope == 'database' :
+       elif scope == 'client' :
          groupcriteria = ['cluster','loghost','client','mtime','mtime_epoch']
        elif scope == 'all':
          groupcriteria = ['cluster','loghost','mtime','mtime_epoch']
@@ -209,4 +209,4 @@ if __name__ == "__main__":
               valid_selection = True
     
     if not valid_selection:
-       print "clientcollector: Command not recognised"
+          print("clientcollector: Command not recognised")

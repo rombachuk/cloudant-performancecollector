@@ -35,6 +35,19 @@ let udp_packet_receive_errors=$current_udp_packet_receive_errors-$previous_udp_p
 echo $current_udp_packet_receive_errors > $netstatoldfile
 echo $cloudant_stats","$udp_packet_receive_errors >> $allfile
 fi
+dynatracefile=`echo "/opt/cloudant-performancecollector/results/dynatrace.sh"`
+epoch=`cat $statsfile | cut -d',' -f 5 | sed "1 d"`
+cloudantdatabaseresponsetimeavg=`cat $statsfile | cut -d',' -f 17 | sed "1 d"`
+cloudantrequests=`cat $statsfile | cut -d',' -f 19 | sed "1 d"`
+cloudante2eresponsetimeavg=`cat $statsfile | cut -d',' -f 22 | sed "1 d"`
+haproxyfeconnections=`cat $statsfile | cut -d',' -f 38 | sed "1 d"`
+haproxybeconnections=`cat $statsfile | cut -d',' -f 42 | sed "1 d"`
+echo "dynatrace_ingest 'cloudant.database_response_time' '$cloudantdatabaseresponsetimeavg' '$epoch""000'" > $dynatracefile
+echo "dynatrace_ingest 'cloudant.requests' '$cloudantrequests' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'cloudant.e2e_response_time' '$cloudante2eresponsetimeavg' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'haproxy.frontend_connections' '$haproxyfeconnections' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'haproxy.backend_connections' '$haproxybeconnections' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'haproxy.udp_packet_loss' '$udp_packet_receive_errors' '$epoch""000'" >> $dynatracefile
 fi
 rm -f $statsfile $eventsfile
 

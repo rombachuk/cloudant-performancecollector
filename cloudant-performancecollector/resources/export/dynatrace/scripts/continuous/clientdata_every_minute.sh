@@ -1,4 +1,4 @@
-#!/bin/bash 
+##!/bin/bash 
 # set -x
 nowepoch=`date +%s`
 let fromepoch=$nowepoch-$2*60
@@ -20,9 +20,26 @@ eventsfile=`eval $findfile`
 if [ $1 = "client" ]
 then
 bysourcefile=`echo "/opt/cloudant-performancecollector/results/bysource_"$today".csv"`
+tmpstatsfile=`echo "/opt/cloudant-performancecollector/results/tmp_client_stats"`
 if [  ! -f $bysourcefile ]; then
 echo "sourceip,timestamp,epoch,database_response_time_avg,cloudant_requests,e2e_response_time_avg" > $bysourcefile
 fi
+cat $statsfile | sed "1 d" > $tmpstatsfile
 cat $statsfile | cut -d',' -f 4,5,6,18,20,23 | sed "1 d" >> $bysourcefile
+dynatracefile=`echo "/opt/cloudant-performancecollector/results/bysource_dynatrace.sh"`
+touch $dynatracefile
+truncate --size 0 $dynatracefile
+while read -r line 
+do
+sourceip=`echo "$line" | cut -d',' -f 4`
+epoch=`echo "$line"  | cut -d',' -f 6`
+cloudantdatabaseresponsetimeavg=`echo "$line" | cut -d',' -f 18`
+cloudantrequests=`echo "$line"  | cut -d',' -f 20`
+cloudante2eresponsetimeavg=`echo "$line"  | cut -d',' -f 23`
+echo "dynatrace_ingest 'cloudant.database_response_time,sourceip=$sourceip' '$cloudantdatabaseresponsetimeavg' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'cloudant.requests,sourceip=$sourceip' '$cloudantrequests' '$epoch""000'" >> $dynatracefile
+echo "dynatrace_ingest 'cloudant.e2e_response_time,sourceip=$sourceip' '$cloudante2eresponsetimeavg' '$epoch""000'" >> $dynatracefile
+done <$tmpstatsfile
 fi
-rm -f $statsfile $eventsfile
+rm -f $statsfile $eventsfile $tmpstatsfile 
+
