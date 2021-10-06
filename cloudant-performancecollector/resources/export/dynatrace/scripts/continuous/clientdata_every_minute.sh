@@ -36,10 +36,13 @@ epoch=`echo "$line"  | cut -d',' -f 6`
 cloudantdatabaseresponsetimeavg=`echo "$line" | cut -d',' -f 18`
 cloudantrequests=`echo "$line"  | cut -d',' -f 20`
 cloudante2eresponsetimeavg=`echo "$line"  | cut -d',' -f 23`
-echo "dynatrace_ingest 'cloudant.database_response_time,sourceip=$sourceip' '$cloudantdatabaseresponsetimeavg' '$epoch""000'" >> $dynatracefile
-echo "dynatrace_ingest 'cloudant.requests,sourceip=$sourceip' '$cloudantrequests' '$epoch""000'" >> $dynatracefile
-echo "dynatrace_ingest 'cloudant.e2e_response_time,sourceip=$sourceip' '$cloudante2eresponsetimeavg' '$epoch""000'" >> $dynatracefile
+dynatrace_ingest=`echo "/opt/dynatrace/oneagent/agent/tools/dynatrace_ingest"`
+echo "$dynatrace_ingest -v 'cloudant.database_response_time,sourceip=$sourceip $cloudantdatabaseresponsetimeavg $epoch""000'" >> $dynatracefile
+echo "$dynatrace_ingest -v 'cloudant.requests,sourceip=$sourceip $cloudantrequests $epoch""000'" >> $dynatracefile
+echo "$dynatrace_ingest -v 'cloudant.e2e_response_time,sourceip=$sourceip' '$cloudante2eresponsetimeavg' '$epoch""000'" >> $dynatracefile
 done <$tmpstatsfile
+chmod +x /opt/cloudant-performancecollector/results/bysource_dynatrace.sh
+#/opt/cloudant-performancecollector/results/bysource_dynatrace.sh > /var/log/bysource_dynatrace.log
 fi
 rm -f $statsfile $eventsfile $tmpstatsfile 
 
