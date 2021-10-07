@@ -1,9 +1,9 @@
 ##!/bin/bash 
 # set -x
 nowepoch=`date +%s`
-let oldepoch=$nowepoch-$2*60-120
-let fromepoch=$nowepoch-$2*60
-let toepoch=$nowepoch-$3*60
+let oldepoch=$nowepoch-$1*60-120
+let fromepoch=$nowepoch-$1*60
+let toepoch=$nowepoch-$2*60
 today=`date -d @$fromepoch +%Y%m%d`
 oldpretty=`date -d @$oldepoch +%Y%m%d%H%M`
 frompretty=`date -d @$fromepoch +%Y%m%d%H%M`
