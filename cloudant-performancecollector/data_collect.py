@@ -99,6 +99,7 @@ def process_collectconfig(cfile):
 
 def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,loghost,clusterurl,\
         linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index,connections_index): 
+    dbnode='unknown'
     database='unknown'
     verb='unknown'
     endpoint='unknown'
@@ -151,6 +152,8 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
          markertime_epoch = int(time.mktime(time.strptime(totime, "%Y%m%d%H%M"))) 
         client = lineparts[linetime_index-1].split(':')
         clientip = client[0]
+        farmlocation = lineparts[timings_index-1].split('/')
+        dbnode = farmlocation[1]
         timings = lineparts[timings_index].split('/')
         tq = int(timings[0])
         tc = int(timings[2])
@@ -212,7 +215,7 @@ def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,
           body = "singlekey_includefalse"
         if (int(linetime) >= int(fromtime)) and (int(linetime) < int(totime)):
           if not exclude_entry(database,verb,endpoint,exclusions) and not exclude_client(clientip,exclusions):
-            thislist.append([clusterurl,loghost,clientip,linetime,markertime,markertime_epoch,database,verb,endpoint,body,tq,tc,tr,tt,ttr,status,size,feconn,beconn,srvconn])
+            thislist.append([clusterurl,dbnode,clientip,linetime,markertime,markertime_epoch,database,verb,endpoint,body,tq,tc,tr,tt,ttr,status,size,feconn,beconn,srvconn])
         return linetime 
      except Exception as e:
         logging.warn('{collect data processor} line processing failure'+str(thisline))
