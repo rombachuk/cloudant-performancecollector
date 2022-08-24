@@ -294,7 +294,7 @@ def get_groups(stats,groupcriteria):
       op8['stfailpct'] = op8.apply(lambda row: 100*(row['st3count']+row['st4count']+row['st5count']) /(row['st2count']+row['st3count']+row['st4count']+row['st5count']), axis=1)
       return op8
     except Exception as e:
-      print e
+      print (e)
       return None
 
 def read_exclusions(efile):
