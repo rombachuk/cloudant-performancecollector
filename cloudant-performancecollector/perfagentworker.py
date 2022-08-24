@@ -47,7 +47,7 @@ if __name__ == '__main__':
        if not 'error' in qdata: 
         for qitem in qdata:
          logging.warn('{perfagent worker} Executing Performance Agent Processing for Entry ['+qitem['_id']+']') 
-	 update_queue_entry(sess,clusterurl,qitem,'apiperfagentqueue',"processing",None,None)
+         update_queue_entry(sess,clusterurl,qitem,'apiperfagentqueue',"processing",None,None)
          if 'opts' in qitem:
           opts = qitem['opts']
           s_url,s_credentials,s_username,s_password,p_url = process_connection_info(opts['connectioninfo'])
