@@ -41,9 +41,6 @@ def execute_volumedata_collect(sess,clusterurl,fromtime,resultid,results_locatio
     return None
   else:
     data = alldbs_response.json()
-    if '_replicator' not in data:
-        logging.warn('cloudant volume collector:  all dbs list: collection failed')
-        return None
     logging.warn('cloudant volume collector:  all dbs list [{}]: collection success'.format(str(len(data))))
     index = 0
     for db in data:
