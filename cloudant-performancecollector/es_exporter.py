@@ -7,6 +7,7 @@ import re
 import base64
 import subprocess 
 import requests
+import sys
 from optparse import OptionParser
 from proxydata_esexport import execute_exportproxy
 from clientdata_esexport import execute_exportclient
@@ -178,4 +179,4 @@ if __name__ == "__main__":
         valid_selection = True
     
     if not valid_selection:
-       print "perfagent_es_exporter: Command not recognised"
+       print ("perfagent_es_exporter: Command not recognised")

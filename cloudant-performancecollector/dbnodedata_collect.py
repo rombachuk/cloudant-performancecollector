@@ -15,39 +15,34 @@ import numpy as np
 import json
 import requests
 from perfagent_menu import *
-from data_collect import *
 from api_utils import *
+from data_collect import *
 
-def get_body_groupcriteria(granularity,scope):
-      
+def get_client_groupcriteria(granularity,scope):
       groupcriteria = ['mtime','mtime_epoch']
       if granularity == 'all':
        groupcriteria = ['mtime','mtime_epoch'] 
-       if scope == 'body' :
-         groupcriteria = ['cluster','loghost','client','database','verb','endpoint','body']
-       elif scope == 'endpoint' :
-         groupcriteria = ['cluster','loghost','client','database','verb','endpoint']
+       if scope == 'endpoint' :
+         groupcriteria = ['cluster','loghost','client','verb','endpoint']
        elif scope == 'verb' :
-         groupcriteria = ['cluster','loghost','client','database','verb']
-       elif scope == 'database' :
+         groupcriteria = ['cluster','loghost','client','verb']
+       elif scope == 'client' :
          groupcriteria = ['cluster','loghost','client']
       else:
-       if scope == 'body' :
-         groupcriteria = ['cluster','loghost','client','database','verb','endpoint','body','mtime','mtime_epoch']
-       elif scope == 'endpoint' :
-         groupcriteria = ['cluster','loghost','client','database','verb','endpoint','mtime','mtime_epoch']
+       if scope == 'endpoint' :
+         groupcriteria = ['cluster','loghost','client','verb','endpoint','mtime','mtime_epoch']
        elif scope == 'verb' :
-         groupcriteria = ['cluster','loghost','client','database','verb','mtime','mtime_epoch']
-       elif scope == 'database' :
+         groupcriteria = ['cluster','loghost','client','verb','mtime','mtime_epoch']
+       elif scope == 'client' :
          groupcriteria = ['cluster','loghost','client','mtime','mtime_epoch']
        elif scope == 'all':
          groupcriteria = ['cluster','loghost','mtime','mtime_epoch']
       return groupcriteria
 
 
-def generate_body_stats_output(op,granularity,scope,fromtime,totime,location,id,format):
+def generate_client_stats_output(op,granularity,scope,fromtime,totime,location,id,format):
     if os.path.exists(location):
-      ofile = location + '/bodystats_' + scope + '_by_' + granularity + '_' + fromtime + '_to_' + totime + '_' + id + '.csv'
+      ofile = location + '/clientstats_' + scope + '_by_' + granularity + '_' + fromtime + '_to_' + totime + '_' + id + '.csv'
       columns=['mtime','mtime_epoch','tqmin','tqavg','tqmax','tqcount','tqsum',\
                'tcmin','tcavg','tcmax','tccount','tcsum',\
                'trmin','travg','trmax','trcount','trsum',\
@@ -61,45 +56,43 @@ def generate_body_stats_output(op,granularity,scope,fromtime,totime,location,id,
       elif scope == 'client':
        columns = ['cluster','loghost','client'] + columns
       elif scope == 'verb':
-       columns = ['cluster','loghost','client','database','verb'] + columns
+       columns = ['cluster','loghost','client','verb'] + columns
       elif scope == 'endpoint':
-       columns = ['cluster','loghost','client','database','verb','endpoint'] + columns
-      elif scope == 'body':
-       columns = ['cluster','loghost','client','database','verb','endpoint','body'] + columns
+       columns = ['cluster','loghost','client','verb','endpoint'] + columns
       if format == 'csv':
        op.to_csv(ofile,columns=columns)
-       logging.warn("{cloudant body data collector} Request Processing for id ["+str(id)+"] Stats Lines Generated = ["+str(len(op.index))+"]")
+       logging.warn("{cloudant client data collector} Request Processing for id ["+str(id)+"] Stats Lines Generated = ["+str(len(op.index))+"]")
        return None,len(op.index)
       if format == 'json':
        opjson = op.to_json(orient='records')
-       logging.warn("{cloudant body data collector} Request Processing for id ["+str(id)+"] Stats Lines Generated = ["+str(len(op.index))+"]")
+       logging.warn("{cloudant client data collector} Request Processing for id ["+str(id)+"] Stats Lines Generated = ["+str(len(op.index))+"]")
        return opjson,len(op.index)
     else:
-      logging.warn('{cloudant body data collector} Results location not found <' + str(location) + '>')
+      logging.warn('{cloudant client data collector} Results location not found <' + str(location) + '>')
 
 
-def execute_body_collect(scope,s_url,s_credentials,s_username,s_password,p_url,certverif,inputlogfile,thresholdsfile,\
+def execute_client_collect(scope,s_url,s_credentials,s_username,s_password,p_url,certverif,inputlogfile,thresholdsfile,\
        eventsexclusionsfile,statsexclusionsfile,fromtime,totime,granularity,performercount,resultslocation,resultsid,outputformat,loghost,cluster_url):
    try:   
-      logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] time-boundary ["+str(fromtime)+"-"+str(totime)+"] Start")
+      logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] time-boundary ["+str(fromtime)+"-"+str(totime)+"] Start")
       result_stats = []
       event_stats = [] 
       numstats = 0
       basestats = find_dbstats(inputlogfile,fromtime,totime,granularity,read_exclusions(statsexclusionsfile),loghost,cluster_url)
       if basestats is None:
-         logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] Log Lines Found = [0]")
+         logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] Log Lines Found = [0]")
          result_stats = []
          result_events = [] 
       else:
         numloglines = len(basestats.index)
-        logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] Log Lines Found = ["+str(numloglines)+"]")
+        logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] Log Lines Found = ["+str(numloglines)+"]")
         if numloglines == 0:
          result_stats = []
          result_events = [] 
         else: 
-         groupedstats = get_groups(basestats,get_body_groupcriteria(granularity,scope))
-         logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] Resource Groups Found = ["+str(len(groupedstats))+"]")
-         ostats,numstats = generate_body_stats_output(groupedstats,granularity,scope,fromtime,totime,resultslocation,resultsid,outputformat)
+         groupedstats = get_groups(basestats,get_client_groupcriteria(granularity,scope))
+         logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] Resource Groups Found = ["+str(len(groupedstats))+"]")
+         ostats,numstats = generate_client_stats_output(groupedstats,granularity,scope,fromtime,totime,resultslocation,resultsid,outputformat)
          if outputformat == 'json':
           if numstats > 0:
             result_stats = json.loads(ostats)
@@ -111,13 +104,13 @@ def execute_body_collect(scope,s_url,s_credentials,s_username,s_password,p_url,c
        if numstats == 0:
          result = { "statsfile" : "", "eventsfile" : "" }
        else: 
-         result = { "statsfile" : str(resultslocation)+ '/stats_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv', 
-       "eventsfile" : str(resultslocation)+ '/events_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv' }
-      logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] End")
+         result = { "statsfile" : str(resultslocation)+ '/clientstats_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv', 
+       "eventsfile" : str(resultslocation)+ '/clientevents_'+scope+'_by_'+granularity+'_'+fromtime+'_to_'+totime+'_'+str(resultsid)+'.csv' }
+      logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] End")
       return result 
    except Exception as e:
-      logging.warn("{cloudant body data collector} Request Processing Unexpected  Error : "+str(e))
-      logging.warn("{cloudant body data collector} Request Processing for id ["+str(resultsid)+"] End")
+      logging.warn("{cloudant client data collector} Request Processing Unexpected  Error : "+str(e))
+      logging.warn("{cloudant client data collector} Request Processing for id ["+str(resultsid)+"] End")
       return None
 
 
@@ -129,11 +122,11 @@ except:
     requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
     requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.SubjectAltNameWarning)
   except:
-    logging.warn("{cloudant body data collector} Unable to disable urllib3 warnings")
+    logging.warn("{cloudant client data collector} Unable to disable urllib3 warnings")
     pass
 
 defaults_file = "/opt/cloudant-performancecollector/resources/collect/configuration/perfagent.conf"
-logfilename = "/var/log/cloudant_bodydata_collector.log"
+logfilename = "/var/log/cloudant_clientdata_collector.log"
 
 logging.basicConfig(filename = logfilename, level=logging.WARN,
                     format='%(asctime)s[%(funcName)-5s] (%(processName)-10s) %(message)s',
@@ -167,7 +160,7 @@ if __name__ == "__main__":
        opts.eventsexclusionsfile = default_eventsexclusionsfile
 
     if not opts.statsexclusionsfile:
-       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/resources/collect/configuration/bodydata_stats_exclusions.info'
+       opts.statsexclusionsfile = '/opt/cloudant-performancecollector/resources/collect/configuration/clientdata_stats_exclusions.info'
 
     if not opts.scope:
        opts.scope = default_scope
@@ -180,7 +173,7 @@ if __name__ == "__main__":
     if not opts.granularity:
        opts.granularity = default_granularity
        valid_granularity = True
-    elif opts.granularity == 'second' or opts.granularity == 'minute'  or  opts.granularity == 'hour'  or opts.granularity == 'day' or opts.granularity == 'all':
+    elif opts.granularity == 'minute'  or  opts.granularity == 'hour'  or opts.granularity == 'day' or opts.granularity == 'all':
        valid_granularity = True
     else:
        valid_granularity = False
@@ -203,17 +196,17 @@ if __name__ == "__main__":
     s_url,s_credentials,s_username,s_password,p_url = process_connection_info(opts.connectioninfo)
 
     if s_url is None or s_credentials is None or s_username is None or s_password is None: 
-          print("bodycollector: Cannot process connection info [" + str(opts.connectioninfo) + "]")
+          print("clientcollector: Cannot process connection info [" + str(opts.connectioninfo) + "]")
           sys.exit(1)
          
     if opts.scope and valid_granularity:
           opts.fromtime,opts.totime = process_timeperiod(opts.fromtime,opts.totime) 
           if len(opts.fromtime) == 12 and len(opts.totime) == 12:
               resultsid = datetime.datetime.now().strftime("%Y%m%d%H%M%f")
-              execute_body_collect(opts.scope,s_url,s_credentials,s_username,s_password,p_url,opts.certverif,\
+              execute_client_collect(opts.scope,s_url,s_credentials,s_username,s_password,p_url,opts.certverif,\
                opts.inputlogfile,opts.thresholdsfile,opts.eventsexclusionsfile,opts.statsexclusionsfile,\
                opts.fromtime,opts.totime,opts.granularity,opts.performercount,opts.resultslocation,resultsid,opts.outputformat,opts.logfilehost,s_url)
               valid_selection = True
     
     if not valid_selection:
-       print ("bodycollector: Command not recognised")
+          print("clientcollector: Command not recognised")

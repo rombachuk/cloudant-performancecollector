@@ -49,7 +49,7 @@ def process_defaults_config(cfile):
           elif len(cflineparts) == 2 and cflineparts[0] == 'default_outputformat':
              default_outputformat = cflineparts[1] 
           else:
- 	     pass
+             pass
       cf.close()
     return default_connectioninfo, default_certificate_verification,default_requests_ca_bundle,default_inputlogfile,\
            default_thresholdsfile, default_eventsexclusionsfile,default_statsexclusionsfile,default_scope,default_granularity,\
@@ -78,7 +78,7 @@ def process_connection_info(cinfo):
           elif len(cflineparts) == 2 and cflineparts[0] == 'proxyurl':
              proxy_url = cflineparts[1] 
           else:
- 	     pass
+            pass
       cf.close()
     return source_url,source_credentials,source_username,source_password,proxy_url
 
