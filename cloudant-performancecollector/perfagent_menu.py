@@ -71,7 +71,8 @@ def process_connection_info(cinfo):
              source_url = cflineparts[1] 
           if len(cflineparts) == 2 and cflineparts[0] == 'sourceBase64':
              source_credentials = cflineparts[1] 
-             src_credparts = str(base64.urlsafe_b64decode(source_credentials)).split(':')
+             src_credbytes = base64.urlsafe_b64decode(source_credentials)          
+             src_credparts = src_credbytes.decode(u'utf-8').split(':')
              if len(src_credparts) == 2:
                 source_username = src_credparts[0]
                 source_password = src_credparts[1]
