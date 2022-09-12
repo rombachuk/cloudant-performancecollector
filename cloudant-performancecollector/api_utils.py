@@ -18,7 +18,7 @@ def is_int(s):
     try:
         int(s)
         return True
-    except TypeError,ValueError:
+    except (TypeError,ValueError) as err:
         return False
 
 def check_ownership(filename,owner,group):
@@ -184,7 +184,7 @@ def exists_db(c_session,url,db):
     elif get_response.status_code == 404:
        data = get_response.json()
        if 'error' in data:
-	if data['error'] == 'not_found':
+        if data['error'] == 'not_found':
            return False
     elif get_response.status_code > 250:
        logging.warn("Check Exists DB Session get error: " + str(get_response.status_code))
@@ -197,7 +197,7 @@ def close_cluster_session(c_session,url):
           delresponse = None
           delresponse = c_session.delete(url+'/_session')
           return delresponse
-    except requests.exceptions.ConnectionError,e:
+    except requests.exceptions.ConnectionError as e:
           return delresponse
 
 def create_cluster_session(url,username,password,proxyurl,certverif):
@@ -222,7 +222,7 @@ def create_cluster_session(url,username,password,proxyurl,certverif):
           if 'Set-Cookie' in this_session_response.headers:
             this_session_cookie = this_session_response.headers['Set-Cookie']
           return this_session, this_session_response,this_session_cookie
-    except requests.exceptions.ConnectionError,e:
+    except requests.exceptions.ConnectionError as e:
           return this_session, this_session_response,this_session_cookie
 
 def process_config(cfile):
