@@ -1,1 +1,0 @@
-"type":"elasticsearch","access":"proxy","basicAuth":true,"isDefault":false,"withCredentials":true,"jsonData":{"esVersion":5,"keepCookies":[],"maxConcurrentShardRequests":256,"timeField":"timestamp","timeInterval":"1m","tlsAuthWithCACert":true},"readOnly":false
