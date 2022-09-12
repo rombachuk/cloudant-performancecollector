@@ -99,6 +99,7 @@ def process_collectconfig(cfile):
 
 def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,loghost,clusterurl,\
         linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index,connections_index): 
+    thisline = thisline.decode(u'utf-8')
     dbnode='unknown'
     database='unknown'
     verb='unknown'
@@ -294,7 +295,7 @@ def get_groups(stats,groupcriteria):
       op7 = pd.merge(op6,st4,on=groupcriteria,how='outer').fillna(0)
       op8 = pd.merge(op7,st5,on=groupcriteria,how='outer').fillna(0)
       op8[['st2count','st3count','st4count','st5count']] = op8[['st2count','st3count','st4count','st5count']].astype(int)
-      op8['stfailpct'] = op8.apply(lambda row: 100*(row['st3count']+row['st4count']+row['st5count']) /(row['st2count']+row['st3count']+row['st4count']+row['st5count']), axis=1)
+      op8['stfailpct'] = op8.apply(lambda row: int(100*(row['st3count']+row['st4count']+row['st5count']) /(row['st2count']+row['st3count']+row['st4count']+row['st5count'])), axis=1)
       return op8
     except Exception as e:
       print (e)

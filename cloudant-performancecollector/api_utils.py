@@ -299,7 +299,8 @@ def find_requestuser(request):
   else:
    cookieauth = request.cookies.get("AuthSession")
    if cookieauth is not None:
-    cookieauthparts = str(base64.urlsafe_b64decode(str(cookieauth))).split(':')
+    cookieauthbytes = base64.urlsafe_b64decode(cookieauth)
+    cookieauthparts = cookieauthbytes.decode(u'utf-8').split(':')
     if len(cookieauthparts) > 1:
      return cookieauthparts[0]
   return None
