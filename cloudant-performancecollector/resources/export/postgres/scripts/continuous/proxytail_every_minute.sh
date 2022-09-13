@@ -1,7 +1,7 @@
 ##!/bin/bash 
 # set -x
 nowepoch=`date +%s`
-let oldepoch=$nowepoch-$1*60-120
+let oldepoch=$nowepoch-$1*60-1200
 let fromepoch=$nowepoch-$1*60
 let toepoch=$nowepoch-$2*60
 today=`date -d @$fromepoch +%Y%m%d`
