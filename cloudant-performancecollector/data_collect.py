@@ -99,7 +99,6 @@ def process_collectconfig(cfile):
 
 def process_dbstatline(thisline,fromtime,totime,thislist,granularity,exclusions,loghost,clusterurl,\
         linetime_format,linetime_index,linetime_start,linetime_end, timings_index,status_index,size_index,base_index,connections_index): 
-    thisline = thisline.decode(u'utf-8')
     dbnode='unknown'
     database='unknown'
     verb='unknown'
@@ -238,6 +237,7 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
      else:
       lf = open(logfile,'r')
      line = lf.readline()
+     line = line.decode(u'utf-8')
      linecount = 1
      pticker=0
      startlinefound = False
@@ -253,6 +253,7 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
         endlinefound = True
         logging.warn('{cloudant body data collector} End of time boundary detected <' + str(totime) + '> at line <'+str(linecount)+'>')
       line = lf.readline()
+      line = line.decode(u'utf-8')
       linecount = linecount+1
      if not startlinefound:
       print('{cloudant body data collector} No lines found for selected collection period starting <' + str(fromtime) + '>')
