@@ -5,6 +5,7 @@ import os
 import base64
 import logging
 import time
+import api_utils
 
 def process_queue(sess,clusterurl,db):
     try:
@@ -15,7 +16,7 @@ def process_queue(sess,clusterurl,db):
      elif query_response.status_code == 404:
       return {'error': 'Queue Access Error - DB not found'},404
      elif query_response.status_code > 250:
-      return {'error': 'Queue Access Session Error ('+str(put_response.status_code)+')'},put_response.status_code
+      return {'error': 'Queue Access Session Error ('+str(query_response.status_code)+')'},query_response.status_code
      else:
       data = query_response.json()
       if 'docs' not in data:

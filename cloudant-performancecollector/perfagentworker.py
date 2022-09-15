@@ -33,7 +33,8 @@ if __name__ == '__main__':
  try:
    logging.warn("{perfagent worker} Startup") 
    clusterurl,creds,migrateapi_status,managedbapi_status,perfagentapi_status = api_utils.process_config('/opt/cloudant-specialapi/csapi.conf')
-   credparts = str(base64.urlsafe_b64decode(str(creds))).split(':')
+   credbytes = base64.urlsafe_b64decode(creds)
+   credparts = credbytes.decode(u'utf-8').split(':')
    if len(credparts) == 2:
     adminuser = credparts[0]
     adminpwd = credparts[1]
