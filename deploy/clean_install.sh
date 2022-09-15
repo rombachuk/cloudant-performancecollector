@@ -1,7 +1,6 @@
 #!/bin/bash
 now=`date +%Y%m%d%H%M` 
 cp -r /opt/cloudant-performancecollector /opt/cloudant-performancecollector-bkp-$now
-mkdir /opt/cloudant-performancecollector-bkp-$now/init.d
 rm -rf /opt/cloudant-performancecollector
 cp -r ../cloudant-performancecollector /opt
 python3 -m venv /opt/cloudant-performancecollector/venv
