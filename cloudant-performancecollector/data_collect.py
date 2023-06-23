@@ -237,7 +237,10 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
      else:
       lf = open(logfile,'r')
      line = lf.readline()
-     line = line.decode(u'utf-8')
+     try:
+       line = line.decode(u'utf-8')
+     except:
+       pass
      linecount = 1
      pticker=0
      startlinefound = False
@@ -253,7 +256,11 @@ def find_dbstats(logfile,fromtime,totime,granularity,exclusions,loghost,cluster_
         endlinefound = True
         logging.warn('{cloudant body data collector} End of time boundary detected <' + str(totime) + '> at line <'+str(linecount)+'>')
       line = lf.readline()
-      line = line.decode(u'utf-8')
+      # workaround to support python2 compatability on centos7 where python3 not installed
+      try:
+        line = line.decode(u'utf-8')
+      except:
+        pass
       linecount = linecount+1
      if not startlinefound:
       print('{cloudant body data collector} No lines found for selected collection period starting <' + str(fromtime) + '>')
@@ -296,7 +303,7 @@ def get_groups(stats,groupcriteria):
       op7 = pd.merge(op6,st4,on=groupcriteria,how='outer').fillna(0)
       op8 = pd.merge(op7,st5,on=groupcriteria,how='outer').fillna(0)
       op8[['st2count','st3count','st4count','st5count']] = op8[['st2count','st3count','st4count','st5count']].astype(int)
-      op8['stfailpct'] = op8.apply(lambda row: int(100*(row['st3count']+row['st4count']+row['st5count']) /(row['st2count']+row['st3count']+row['st4count']+row['st5count'])), axis=1)
+      op8['stfailpct'] = op8.apply(lambda row: 0 if (row['st2count']+row['st3count']+row['st4count']+row['st5count']) == 0 else int(100*(row['st3count']+row['st4count']+row['st5count']) /(row['st2count']+row['st3count']+row['st4count']+row['st5count'])), axis=1)
       return op8
     except Exception as e:
       print (e)

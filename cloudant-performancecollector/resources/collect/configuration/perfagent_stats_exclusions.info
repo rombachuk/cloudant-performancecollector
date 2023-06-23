@@ -1,3 +1,4 @@
 {"verb":"GET","endpoint":"_changes"}
+{"verb":"POST","endpoint":"_changes"}
 {"verb":"GET","endpoint":"none"}
 {"clientip":"192.168.254.68"}
