@@ -23,7 +23,6 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        passphrase: ${{ secrets.PASSPHRASE }}
         key: ${{ secrets.KEY }}
         port: 22
         source: "deploy.tar"
@@ -39,4 +38,3 @@ jobs:
         HOST: ${{ secrets.HOST }}
         KEY: ${{ secrets.KEY }}
         USER: ${{ secrets.USERNAME }}
-        PASSPHRASE: ${{ secrets.PASSPHRASE }}
