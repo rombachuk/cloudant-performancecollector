@@ -28,13 +28,13 @@ jobs:
         source: "deploy.tar"
         target: "/home/"
 
-    - name: copy file using shell on runner
-      run: |
-        echo $KEY > privatekey
-        ls -l privatekey
-        chmod 400 privatekey
-        scp -i privatekey -o StrictHostKeyChecking=no ../build/deploy.tar $USER@$HOST:/home/test/
-      env:
-        HOST: ${{ secrets.HOST }}
-        KEY: ${{ secrets.KEY }}
-        USER: ${{ secrets.USERNAME }}
+    - name: multiple command
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        port: 22
+        script: |
+          tar xvf /home/deploy.tar
+          ls -al build
