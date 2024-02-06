@@ -32,6 +32,7 @@ jobs:
     - name: copy file using shell on runner
       run: |
         echo $KEY > privatekey
+        echo $PASSPHRASE | ssh-add
         ls -l privatekey
         chmod 600 privatekey
         scp -i privatekey -o StrictHostKeyChecking=no ../build/deploy.tar $USER@$HOST:/home/test/
@@ -39,3 +40,4 @@ jobs:
         HOST: ${{ secrets.HOST }}
         KEY: ${{ secrets.KEY }}
         USER: ${{ secrets.USERNAME }}
+        PASSPHRASE: ${{ secrets.PASSPHRASE }}
