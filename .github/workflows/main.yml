@@ -32,5 +32,9 @@ jobs:
       run: |
         echo $KEY > privatekey
         ls -l privatekey
+        chmod 400 privatekey
+        scp -i privatekey -o StrictHostKeyChecking=no ../build/deploy.tar $USER@$HOST:/home/test/
       env:
+        HOST: ${{ secrets.HOST }}
         KEY: ${{ secrets.KEY }}
+        USER: ${{ secrets.USERNAME }}
