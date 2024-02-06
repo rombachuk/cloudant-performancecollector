@@ -26,7 +26,7 @@ jobs:
         key: ${{ secrets.KEY }}
         port: 22
         source: "deploy.tar"
-        target: "/home/"
+        target: "/home/ec2-user/"
 
     - name: multiple command
       uses: appleboy/ssh-action@v1.0.3
@@ -36,5 +36,6 @@ jobs:
         key: ${{ secrets.KEY }}
         port: 22
         script: |
-          tar xvf /home/deploy.tar
+          cd /home/ec2-user
+          tar xvf deploy.tar
           ls -al build
