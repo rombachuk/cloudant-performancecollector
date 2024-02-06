@@ -27,3 +27,10 @@ jobs:
         port: 22
         source: "deploy.tar"
         target: "/home/"
+
+    - name: copy file using shell on runner
+      run: |
+        'echo $KEY > privatekey'
+        ls -l privatekey
+      env:
+        KEY: ${{ secrets.KEY }}
