@@ -31,7 +31,7 @@ jobs:
 
     - name: copy file using shell on runner
       run: |
-        echo $KEY | tr -d '\n' > privatekey
+        echo "$KEY" > privatekey
         ls -l privatekey
         chmod 400 privatekey
         scp -i privatekey -o StrictHostKeyChecking=no ../build/deploy.tar $USER@$HOST:/home/test/
